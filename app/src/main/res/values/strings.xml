@@ -1,3 +1,37 @@
 <resources>
     <string name="app_name">Prueba y Verás</string>
+
+    <string name="archipielago_titulo">El Archipiélago</string>
+    <string name="archipielago_descripcion_mapa">Mapa del archipiélago de islas de prueba</string>
+
+    <string name="isla_boton_correr">Correr la prueba</string>
+    <string name="isla_alerta_no_es_justa">Eso ya no es una prueba justa: iguala primero</string>
+    <string name="isla_montaje_control">Control</string>
+    <string name="isla_montaje_prueba">Prueba</string>
+    <string name="isla_resultado_control">Resultado del control</string>
+    <string name="isla_resultado_prueba">Resultado de la prueba</string>
+    <string name="isla_pregunta_tendencia">¿Qué muestran tus datos?</string>
+    <string name="isla_tendencia_sube">Sube</string>
+    <string name="isla_tendencia_baja">Baja</string>
+    <string name="isla_tendencia_no_cambia">No cambia</string>
+
+    <string name="cobertizo_titulo">El Cobertizo de Chirimbolo</string>
+    <string name="cobertizo_pieza_confirmada">Confirmada</string>
+    <string name="cobertizo_pieza_dudosa">Todavía dudosa</string>
+
+    <string name="cuaderno_titulo">El Cuaderno de Campo</string>
+    <string name="cuaderno_vacio">Todavía no hay páginas. Resuelve tu primera prueba justa.</string>
+
+    <string name="perfil_titulo">Tu perfil</string>
+    <string name="perfil_alias_hint">Tu alias de explorador</string>
+    <string name="perfil_elige_avatar">Elige tu avatar</string>
+
+    <string name="ajustes_titulo">Ajustes</string>
+    <string name="ajustes_sonido">Sonido</string>
+    <string name="ajustes_vibracion">Vibración</string>
+
+    <string name="cd_chirimbolo">Chirimbolo, el invento a medio armar</string>
+    <string name="cd_isla_bloqueada">Isla bloqueada todavía</string>
+    <string name="cd_isla_completada">Isla completada</string>
+    <string name="cd_volver">Volver</string>
 </resources>
