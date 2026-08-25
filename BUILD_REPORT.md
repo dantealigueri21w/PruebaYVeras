@@ -45,7 +45,7 @@ BUILD SUCCESSFUL in 27s
 Todos los avisos son esperables en esta etapa: versiones de librería ancladas a
 propósito (igual que `numeropolis` y `fabrica-de-historias`, para no arriesgar
 una combinación no probada), `MissingApplicationIcon` porque el icono real
-sale de Gemini en la Parte 2, y `allowBackup` deprecado (cosmético, no afecta
+se genera en la Parte 2, y `allowBackup` deprecado (cosmético, no afecta
 la regla de privacidad de la sección 9: la app no declara `INTERNET` ni ningún
 otro permiso).
 
@@ -64,7 +64,7 @@ la sección 1 del prompt maestro, aplicado a una clase de infraestructura.
 
 Tema y paleta, los componentes reutilizables no genéricos de la sección 3.1
 (mesa de doble montaje, formas propias, navegación diegética), las 14
-pantallas, la integración del arte generado en Gemini, y la verificación
+pantallas, la integración del arte generado, y la verificación
 completa con `assembleDebug` + `lintDebug` + pruebas de Compose con
 Robolectric (sección 10.1). No se declara terminada la app hasta que la
 Parte 2 también esté verde.
