@@ -18,7 +18,7 @@ object SemillaRetos {
         RetoEntity("reto_viento_medio", "isla_viento", "MEDIO",
             "Un isleño duda si la altura también cambia cuánto tarda en llegar al suelo.", "paracaidas"),
         RetoEntity("reto_viento_dificil", "isla_viento", "DIFICIL",
-            "Prueba desde tres alturas distintas y arma la tendencia del tiempo de caída.", "paracaidas"),
+            "Prueba desde tres alturas distintas y arma la tendencia del tiempo de caída.", "altura"),
 
         // Isla del Jardín
         RetoEntity("reto_jardin_facil", "isla_jardin", "FACIL",
@@ -26,7 +26,7 @@ object SemillaRetos {
         RetoEntity("reto_jardin_medio", "isla_jardin", "MEDIO",
             "Una isleña quiere saber si sin agua la hojita crece igual, con o sin luz.", "agua"),
         RetoEntity("reto_jardin_dificil", "isla_jardin", "DIFICIL",
-            "Prueba el crecimiento a los 2, 5 y 8 días y arma la tendencia completa.", "luz"),
+            "Prueba el crecimiento a los 2, 5 y 8 días y arma la tendencia completa.", "dias"),
 
         // Isla de la Cueva
         RetoEntity("reto_cueva_facil", "isla_cueva", "FACIL",
@@ -74,6 +74,6 @@ object SemillaRetos {
         RetoEntity("reto_reflejo_medio", "isla_reflejo", "MEDIO",
             "Una isleña pregunta si el tiempo al sol también cambia cuánto se calienta.", "color"),
         RetoEntity("reto_reflejo_dificil", "isla_reflejo", "DIFICIL",
-            "Prueba a los 5, 10 y 20 minutos al sol y arma la tendencia de la temperatura.", "color"),
+            "Prueba a los 5, 10 y 20 minutos al sol y arma la tendencia de la temperatura.", "minutos"),
     )
 }
