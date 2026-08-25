@@ -1,0 +1,29 @@
+# Herramientas y notas internas
+.claude/
+.cursor/
+.idea/
+*.iml
+NOTAS.md
+SUBIR_A_GITHUB.md
+
+# Build
+.gradle/
+build/
+app/build/
+/captures
+.externalNativeBuild
+.cxx
+
+# Rutas y llaves locales
+local.properties
+*.jks
+*.keystore
+
+# Salidas
+*.apk
+*.aab
+/deliverables/
+
+# Sistema
+.DS_Store
+Thumbs.db
