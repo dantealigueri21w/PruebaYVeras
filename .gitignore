@@ -1,12 +1,10 @@
-# Herramientas y notas internas
-.claude/
-.cursor/
-.idea/
-*.iml
+# Notas internas
 NOTAS.md
 SUBIR_A_GITHUB.md
 
 # Build
+.idea/
+*.iml
 .gradle/
 build/
 app/build/
