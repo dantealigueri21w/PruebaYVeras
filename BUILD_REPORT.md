@@ -328,3 +328,37 @@ Viento: paracaídas, paracaídas, altura), lo que puede sentirse arbitrario.
 Implementarlo bien pide un montaje de tres vías y una forma de repetir una
 prueba dentro de un mismo reto — trabajo aparte, no un ajuste de una
 función.
+
+## 26/08/2026 — Resuelto: el reto difícil ahora corre tres montajes reales
+
+Cerrado el pendiente de la sección anterior. En vez de un montaje de tres
+vías simultáneo, se optó por reutilizar la mesa de dos que ya existe: el
+reto difícil pide **tres corridas reales** de "Correr la prueba" antes de
+avanzar, cada una con una magnitud distinta de la misma variable
+(`variableIndependiente` del reto), controlado por `EstadoIsla.corridasRetoActual`
+y `EstadoIsla.corridasNecesarias` en `IslaViewModel`. Fácil y medio siguen
+pidiendo una sola corrida, sin cambios.
+
+- Repetir la misma magnitud dentro del reto difícil se rechaza
+  (`ultimoAvisoMagnitudRepetida`, contra `CienciaLabRepository.magnitudesProbadas`,
+  que lee los `intento` reales ya guardados) — tres corridas con el mismo
+  número no arman una tendencia, solo repiten el mismo punto.
+- La pregunta final de tendencia ya no usa `resultadosPorReto` (que mezclaba
+  los tres retos, incluso cuando probaban variables distintas — se eliminó
+  ese campo por completo). Ahora usa
+  `CienciaLabRepository.datosOrdenadosPorMagnitud`, que trae solo los datos
+  reales del reto difícil, ordenados por la magnitud probada — no por el
+  orden en que se jugaron, para que la tendencia sea correcta sin importar
+  en qué orden el niño haya elegido las tres cantidades.
+- El panel de resultado (`PanelResultado`) muestra "Corrida X de 3" y cambia
+  el texto del botón a "Probar con otra cantidad" mientras falten corridas;
+  recién en la última dice "Continuar".
+
+Probado con las nueve islas en mente: como todos los `variableIndependiente`
+del reto difícil son numéricos (ninguno booleano ni enum — confirmado en
+`AdaptadoresIslas.kt`), la comparación de magnitudes no necesitó casos
+especiales por tipo. Caso de prueba dedicado con Isla del Viento (donde
+fácil/medio prueban "paracaídas" y difícil prueba "altura", el ejemplo real
+que motivó este arreglo) confirmando que la tendencia final sale correcta
+usando solo los datos de altura, sin importar qué haya pasado en los otros
+dos retos.

@@ -30,12 +30,15 @@ fun PanelResultado(
     resultadoPrueba: Float,
     onContinuar: () -> Unit,
     modifier: Modifier = Modifier,
+    corridaActual: Int = 1,
+    corridasNecesarias: Int = 1,
 ) {
     val tendencia = when {
         resultadoPrueba > resultadoControl -> stringResource(R.string.isla_tendencia_sube)
         resultadoPrueba < resultadoControl -> stringResource(R.string.isla_tendencia_baja)
         else -> stringResource(R.string.isla_tendencia_no_cambia)
     }
+    val quedanCorridas = corridaActual < corridasNecesarias
 
     Column(
         modifier = modifier
@@ -50,6 +53,13 @@ fun PanelResultado(
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
+        if (corridasNecesarias > 1) {
+            Text(
+                text = stringResource(R.string.isla_resultado_progreso, corridaActual, corridasNecesarias),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
         Text(
             text = "${stringResource(R.string.isla_resultado_control)}: ${formatearResultado(resultadoControl)}",
             style = MaterialTheme.typography.bodyLarge,
@@ -66,7 +76,13 @@ fun PanelResultado(
             color = MaterialTheme.colorScheme.primary,
         )
         Button(onClick = onContinuar) {
-            Text(stringResource(R.string.isla_resultado_continuar))
+            Text(
+                if (quedanCorridas) {
+                    stringResource(R.string.isla_resultado_seguir_probando)
+                } else {
+                    stringResource(R.string.isla_resultado_continuar)
+                },
+            )
         }
     }
 }

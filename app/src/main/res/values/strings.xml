@@ -19,6 +19,9 @@
     <string name="isla_resultado_titulo">Esto es lo que pasó</string>
     <string name="isla_resultado_etiqueta_tendencia">El resultado:</string>
     <string name="isla_resultado_continuar">Continuar</string>
+    <string name="isla_resultado_seguir_probando">Probar con otra cantidad</string>
+    <string name="isla_resultado_progreso">Corrida %1$d de %2$d</string>
+    <string name="isla_aviso_magnitud_repetida">Ya probaste esa cantidad — cambia la perilla a otra distinta</string>
     <string name="isla_pregunta_tendencia">¿Qué muestran tus datos?</string>
     <string name="isla_tendencia_sube">Sube</string>
     <string name="isla_tendencia_baja">Baja</string>

@@ -89,6 +89,8 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
                         resultadoControl = resultado.resultadoControl,
                         resultadoPrueba = resultado.resultadoPrueba,
                         onContinuar = viewModel::continuarTrasResultado,
+                        corridaActual = estado.corridasRetoActual,
+                        corridasNecesarias = estado.corridasNecesarias,
                     )
                 } else {
                     MesaDoblePrueba(
@@ -141,6 +143,14 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
                     PanelLegible {
                         Text(
                             stringResource(R.string.isla_alerta_no_es_justa),
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+                if (estado.ultimoAvisoMagnitudRepetida) {
+                    PanelLegible {
+                        Text(
+                            stringResource(R.string.isla_aviso_magnitud_repetida),
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }

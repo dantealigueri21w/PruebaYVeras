@@ -51,6 +51,26 @@ class CienciaLabRepository(private val db: AppDatabase) {
         return MotorCuadernoDatos.tendenciaReal(datos)
     }
 
+    /** Las magnitudes reales ya probadas para un reto — `valorPrueba` es siempre el
+     * valor de `variableIndependiente` en esa corrida (así se guarda en
+     * [registrarIntento]), así que no hace falta guardarlo aparte. Sirve para no dejar
+     * repetir la misma magnitud dos veces en el reto difícil: una "tendencia" armada
+     * con el mismo dato tres veces no dice nada. */
+    suspend fun magnitudesProbadas(idReto: String): List<Float> =
+        db.intentoDao().observarPorReto(idReto).first()
+            .filter { it.fueJusta }
+            .mapNotNull { it.valorPrueba.toFloatOrNull() }
+
+    /** Los resultados reales de un reto, ordenados por la magnitud que se probó (no por
+     * el orden en que se jugaron) — para que la tendencia sea correcta sin importar en
+     * qué orden el niño haya elegido las tres cantidades. */
+    suspend fun datosOrdenadosPorMagnitud(idReto: String): List<Float> =
+        db.intentoDao().observarPorReto(idReto).first()
+            .filter { it.fueJusta }
+            .mapNotNull { intento -> intento.valorPrueba.toFloatOrNull()?.let { it to intento.resultadoPrueba } }
+            .sortedBy { it.first }
+            .map { it.second }
+
     suspend fun confirmarPieza(idPieza: String) {
         val pieza = db.piezaChirimboloDao().observarTodas().first().first { it.idPieza == idPieza }
         db.piezaChirimboloDao().actualizar(pieza.copy(confirmada = true))

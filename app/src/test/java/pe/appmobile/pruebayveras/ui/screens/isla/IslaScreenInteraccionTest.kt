@@ -97,14 +97,8 @@ class IslaScreenInteraccionTest {
         compose.waitForIdle()
         compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
         compose.waitForIdle()
+        esperarResultado(viewModel)
 
-        var pasadas = 0
-        while (viewModel.estado.value.ultimoResultado == null && pasadas < 100) {
-            Thread.sleep(50)
-            compose.waitForIdle()
-            pasadas++
-        }
-        assertTrue("debe verse un resultado tras correr la prueba", viewModel.estado.value.ultimoResultado != null)
         compose.onNodeWithText("Resultado del control", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Resultado de la prueba", substring = true).assertIsDisplayed()
 
@@ -117,6 +111,71 @@ class IslaScreenInteraccionTest {
             indiceInicial + 1,
             viewModel.estado.value.indiceRetoActual,
         )
+    }
+
+    @Test
+    fun `el reto dificil pide tres corridas reales, con progreso visible, antes de abrir la pregunta de tendencia`() {
+        val (viewModel, _) = cargarIsla("isla_marea")
+
+        // Facil y medio piden una sola corrida cada uno.
+        repeat(2) {
+            viewModel.cambiarVariablePrueba("sal", it + 1)
+            compose.waitForIdle()
+            compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
+            compose.waitForIdle()
+            esperarResultado(viewModel)
+            compose.onNodeWithText("Continuar").performScrollTo().performClick()
+            compose.waitForIdle()
+        }
+        assertEquals("DIFICIL", viewModel.estado.value.retoActual?.dificultad)
+
+        // Primera corrida del reto dificil: debe verse "Corrida 1 de 3". Como todavia
+        // faltan corridas, el boton no dice "Continuar" sino "Probar con otra
+        // cantidad" — si dijera "Continuar" ahi mismo, invitaria a saltarse las otras
+        // dos corridas.
+        viewModel.cambiarVariablePrueba("sal", 10)
+        compose.waitForIdle()
+        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
+        compose.waitForIdle()
+        esperarResultado(viewModel)
+        compose.onNodeWithText("Corrida 1 de 3", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Probar con otra cantidad").performScrollTo().performClick()
+        compose.waitForIdle()
+        assertEquals("DIFICIL", viewModel.estado.value.retoActual?.dificultad)
+        assertTrue("todavia no debe preguntar la tendencia", !viewModel.estado.value.mostrarPreguntaTendencia)
+
+        // Segunda corrida: "Corrida 2 de 3", tampoco avanza todavia.
+        viewModel.cambiarVariablePrueba("sal", 15)
+        compose.waitForIdle()
+        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
+        compose.waitForIdle()
+        esperarResultado(viewModel)
+        compose.onNodeWithText("Corrida 2 de 3", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Probar con otra cantidad").performScrollTo().performClick()
+        compose.waitForIdle()
+        assertTrue("todavia no debe preguntar la tendencia", !viewModel.estado.value.mostrarPreguntaTendencia)
+
+        // Tercera corrida: recien aqui abre la pregunta de tendencia.
+        viewModel.cambiarVariablePrueba("sal", 20)
+        compose.waitForIdle()
+        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
+        compose.waitForIdle()
+        esperarResultado(viewModel)
+        compose.onNodeWithText("Corrida 3 de 3", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Continuar").performScrollTo().performClick()
+        compose.waitForIdle()
+
+        assertTrue("tras la tercera corrida si debe preguntar la tendencia", viewModel.estado.value.mostrarPreguntaTendencia)
+    }
+
+    private fun esperarResultado(viewModel: IslaViewModel) {
+        var pasadas = 0
+        while (viewModel.estado.value.ultimoResultado == null && pasadas < 100) {
+            Thread.sleep(50)
+            compose.waitForIdle()
+            pasadas++
+        }
+        assertTrue("debe verse un resultado tras correr la prueba", viewModel.estado.value.ultimoResultado != null)
     }
 
     @Test
