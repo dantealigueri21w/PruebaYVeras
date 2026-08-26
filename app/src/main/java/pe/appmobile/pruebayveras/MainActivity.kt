@@ -3,13 +3,18 @@ package pe.appmobile.pruebayveras
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.Text
+import pe.appmobile.pruebayveras.data.AppDatabaseProvider
+import pe.appmobile.pruebayveras.ui.navigation.PruebaYVerasNavHost
+import pe.appmobile.pruebayveras.ui.theme.PruebaYVerasTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val db = AppDatabaseProvider.obtener(applicationContext)
         setContent {
-            Text("Prueba y Verás — Parte 1: dominio y datos en construcción")
+            PruebaYVerasTheme {
+                PruebaYVerasNavHost(db = db)
+            }
         }
     }
 }
