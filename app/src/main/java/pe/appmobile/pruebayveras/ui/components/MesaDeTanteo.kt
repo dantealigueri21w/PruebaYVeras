@@ -32,12 +32,18 @@ fun MesaDeTanteo(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth().padding(12.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Column {
+        // Modifier.weight(1f) en las dos columnas es obligatorio aquí: cada
+        // PanelLegible interno ya pide fillMaxWidth() para su propio panel de texto, y
+        // sin weight(), la columna de Control (medida primero) se queda con TODO el
+        // ancho de la Row y la de Prueba queda con ancho cero — invisible e
+        // improbable de tocar en una pantalla angosta (bug real encontrado con un
+        // arrastre real de PerillaGiratoria dentro de IslaScreen, no solo aislada).
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.weight(1f)) {
                 PanelLegible { Text(stringResource(R.string.isla_montaje_control), style = MaterialTheme.typography.labelLarge) }
                 control.variables.forEach { variable -> contenidoVariable(variable.nombre, control, true) }
             }
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 PanelLegible { Text(stringResource(R.string.isla_montaje_prueba), style = MaterialTheme.typography.labelLarge) }
                 prueba.variables.forEach { variable -> contenidoVariable(variable.nombre, prueba, false) }
             }

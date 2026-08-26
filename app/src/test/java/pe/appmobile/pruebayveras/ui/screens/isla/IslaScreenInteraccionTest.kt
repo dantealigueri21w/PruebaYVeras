@@ -2,9 +2,13 @@ package pe.appmobile.pruebayveras.ui.screens.isla
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -220,5 +224,42 @@ class IslaScreenInteraccionTest {
         }
         assertTrue("elegir la tendencia real debe confirmar la pieza", viewModel.estado.value.piezaConfirmada)
         compose.onNodeWithText("Chirimbolo tiene una pieza más", substring = true).assertIsDisplayed()
+    }
+
+    // `PerillaGiratoria` recorre cualquier rango con la MISMA distancia de arrastre
+    // (`DISTANCIA_RANGO_COMPLETO` en PerillaGiratoria.kt) — un rango angosto (sal,
+    // 0-20) y uno ancho (altura, 0-60) deben sentirse igual de jugables con el mismo
+    // largo de arrastre. `MesaDeTanteo` ahora muestra TODAS las variables de la isla a
+    // la vez (no solo la del reto activo), así que no hace falta avanzar de reto para
+    // llegar a "altura": ya está en la mesa desde el primer reto de la Isla del Viento.
+    private val distanciaComodaDeArrastre get() = with(compose.density) { 400.dp.toPx() }
+
+    @Test
+    fun `un arrastre comodo en la mesa de tanteo real completa un rango angosto (sal, 0-20)`() {
+        val (viewModel, _) = cargarIsla("isla_marea")
+
+        compose.onNodeWithContentDescription("sal:", substring = true).performScrollTo().performTouchInput {
+            swipeUp(startY = bottom, endY = bottom - distanciaComodaDeArrastre, durationMillis = 300)
+        }
+        compose.waitForIdle()
+
+        assertEquals(20, viewModel.estado.value.prueba.valorDe("sal"))
+    }
+
+    @Test
+    fun `el mismo arrastre comodo en la mesa de tanteo real tambien completa un rango ancho (altura, 0-60)`() {
+        val (viewModel, _) = cargarIsla("isla_viento")
+
+        compose.onNodeWithContentDescription("altura:", substring = true).performScrollTo().performTouchInput {
+            swipeUp(startY = bottom, endY = bottom - distanciaComodaDeArrastre, durationMillis = 300)
+        }
+        compose.waitForIdle()
+
+        assertEquals(
+            "el rango ancho (0..60) deberia completarse con el mismo arrastre que el angosto",
+            60f,
+            viewModel.estado.value.prueba.valorDe("altura") as Float,
+            0.01f,
+        )
     }
 }

@@ -32,7 +32,6 @@
     <string name="isla_prueba_injusta_explicacion">Cambiaste %1$s a la vez, así que no podemos saber cuál de esas causó el resultado. Iguala todo menos una cosa y vuelve a correr la prueba.</string>
     <string name="isla_prueba_justa_titulo">¡Prueba justa!</string>
     <string name="isla_reintentar">Volver a intentar</string>
-    <string name="isla_ver_dato">Ver el dato</string>
     <string name="isla_sabias_que_titulo">¿Sabías que...?</string>
     <string name="isla_pregunta_tendencia">¿Qué muestran tus datos?</string>
     <string name="isla_tendencia_sube">Sube</string>
