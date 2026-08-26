@@ -27,15 +27,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import pe.appmobile.pruebayveras.R
+import pe.appmobile.pruebayveras.domain.adapter.adaptadorDe
+import pe.appmobile.pruebayveras.domain.engine.Tendencia
+import pe.appmobile.pruebayveras.domain.model.Montaje
 import pe.appmobile.pruebayveras.domain.model.TipoObstaculo
 import pe.appmobile.pruebayveras.domain.model.TipoSuperficie
+import pe.appmobile.pruebayveras.ui.components.AyudaFlotante
 import pe.appmobile.pruebayveras.ui.components.GloboDialogoChirimbolo
 import pe.appmobile.pruebayveras.ui.components.InterruptorDiegetico
+import pe.appmobile.pruebayveras.ui.components.MesaDeTanteo
+import pe.appmobile.pruebayveras.ui.components.MetaDireccional
 import pe.appmobile.pruebayveras.ui.components.OpcionBinaria
 import pe.appmobile.pruebayveras.ui.components.PanelLegible
-import pe.appmobile.pruebayveras.ui.components.PanelResultado
 import pe.appmobile.pruebayveras.ui.components.PerillaGiratoria
 import pe.appmobile.pruebayveras.ui.components.SelectorBinario
+import pe.appmobile.pruebayveras.ui.components.TarjetaSabiasQue
 import pe.appmobile.pruebayveras.ui.theme.chirimboloPose
 import pe.appmobile.pruebayveras.ui.theme.fondoDeIsla
 
@@ -43,8 +49,6 @@ import pe.appmobile.pruebayveras.ui.theme.fondoDeIsla
 fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
     val estado by viewModel.estado.collectAsState()
     if (estado.retos.isEmpty()) return
-
-    val reto = estado.retoActual
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -55,11 +59,9 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
         )
 
         IconButton(onClick = onVolver, modifier = Modifier.padding(8.dp)) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.cd_volver),
-            )
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_volver))
         }
+        AyudaFlotante(reto = estado.retoActual, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
 
         Column(
             modifier = Modifier
@@ -71,16 +73,22 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
         ) {
             if (estado.piezaConfirmada) {
                 PanelLegible {
-                    Text(
-                        stringResource(R.string.isla_completada_titulo),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Text(stringResource(R.string.isla_completada_titulo), style = MaterialTheme.typography.titleLarge)
                     Button(onClick = onVolver, modifier = Modifier.padding(top = 12.dp)) {
                         Text(stringResource(R.string.isla_completada_volver))
                     }
                 }
-            } else if (reto != null) {
+            } else if (estado.mostrarPreguntaTendencia) {
+                PanelLegible {
+                    Text(stringResource(R.string.isla_pregunta_tendencia), style = MaterialTheme.typography.titleMedium)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                        Button(onClick = { viewModel.elegirTendencia(Tendencia.SUBE) }) { Text(stringResource(R.string.isla_tendencia_sube)) }
+                        Button(onClick = { viewModel.elegirTendencia(Tendencia.BAJA) }) { Text(stringResource(R.string.isla_tendencia_baja)) }
+                        Button(onClick = { viewModel.elegirTendencia(Tendencia.NO_CAMBIA) }) { Text(stringResource(R.string.isla_tendencia_no_cambia)) }
+                    }
+                }
+            } else {
+                val reto = estado.retoActual ?: return@Column
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
                         painter = painterResource(chirimboloPose("explica")),
@@ -91,58 +99,78 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
                 }
 
                 val resultado = estado.ultimoResultado
-                if (resultado != null) {
-                    PanelResultado(
-                        resultadoReal = resultado.resultadoReal,
-                        valorObjetivo = reto.valorObjetivo,
-                        margenObjetivo = reto.margenObjetivo,
-                        logrado = resultado.logrado,
-                        onContinuar = viewModel::continuarTrasResultado,
+                if (resultado == null) {
+                    MetaDireccional(direccionEsperada = reto.direccionEsperada)
+                    MesaDeTanteo(
+                        control = Montaje(adaptadorDe(estado.idIsla).variablesBase),
+                        prueba = estado.prueba,
+                        onEjecutar = viewModel::ejecutarPrueba,
+                        contenidoVariable = { nombre, montaje, esControl ->
+                            val valor = montaje.valorDe(nombre)
+                            if (esControl) {
+                                PanelLegible { Text("$nombre: $valor") }
+                            } else {
+                                ControlDeVariable(nombre = nombre, valor = valor, onCambia = { viewModel.cambiarVariablePrueba(nombre, it) })
+                            }
+                        },
                     )
                 } else {
-                    val valor = estado.prueba.valorDe(reto.variableIndependiente)
-                    val nombre = reto.variableIndependiente
-
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        when (valor) {
-                            is Int -> PerillaGiratoria(
-                                valor = valor, rango = 0..20, etiqueta = nombre,
-                                onValorCambia = { viewModel.cambiarVariablePrueba(nombre, it) },
-                            )
-                            is Float -> PerillaGiratoria(
-                                valor = valor.toInt(), rango = rangoDeVariableContinua(nombre), etiqueta = nombre,
-                                onValorCambia = { viewModel.cambiarVariablePrueba(nombre, it.toFloat()) },
-                            )
-                            is Boolean -> InterruptorDiegetico(
-                                activado = valor,
-                                onCambia = { viewModel.cambiarVariablePrueba(nombre, it) },
-                                iconoActivado = R.drawable.chirimbolo_celebra,
-                                iconoDesactivado = R.drawable.chirimbolo_confundido,
-                                descripcionActivado = "$nombre activado",
-                                descripcionDesactivado = "$nombre desactivado",
-                            )
-                            is TipoSuperficie -> SelectorBinario(
-                                seleccionado = valor,
-                                opciones = OpcionBinaria(TipoSuperficie.LISA, R.drawable.objeto_carrito, stringResource(R.string.isla_superficie_lisa)) to
-                                    OpcionBinaria(TipoSuperficie.RUGOSA, R.drawable.objeto_carrito, stringResource(R.string.isla_superficie_rugosa)),
-                                onSeleccion = { viewModel.cambiarVariablePrueba(nombre, it) },
-                            )
-                            is TipoObstaculo -> SelectorBinario(
-                                seleccionado = valor,
-                                opciones = OpcionBinaria(TipoObstaculo.CARTON, R.drawable.objeto_iman, stringResource(R.string.isla_obstaculo_carton)) to
-                                    OpcionBinaria(TipoObstaculo.METAL_GRUESO, R.drawable.objeto_iman, stringResource(R.string.isla_obstaculo_metal_grueso)),
-                                onSeleccion = { viewModel.cambiarVariablePrueba(nombre, it) },
-                            )
-                            else -> Unit
+                    PanelLegible {
+                        Text(
+                            if (resultado.fueJusta) stringResource(R.string.isla_prueba_justa_titulo) else stringResource(R.string.isla_prueba_injusta_titulo),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        if (!resultado.fueJusta) {
+                            Text(stringResource(R.string.isla_prueba_injusta_explicacion, resultado.variablesDistintas.joinToString(", ")))
                         }
-
-                        Button(onClick = viewModel::probar, modifier = Modifier.padding(top = 16.dp)) {
-                            Text(stringResource(R.string.isla_boton_probar))
+                        Text(
+                            "${stringResource(R.string.isla_montaje_control)}: ${resultado.resultadoControl}   " +
+                                "${stringResource(R.string.isla_montaje_prueba)}: ${resultado.resultadoPrueba}",
+                        )
+                        Button(onClick = viewModel::continuarTrasResultado, modifier = Modifier.padding(top = 12.dp)) {
+                            Text(if (resultado.fueJusta) stringResource(R.string.isla_resultado_continuar) else stringResource(R.string.isla_reintentar))
                         }
                     }
                 }
             }
         }
+
+        // Se dibuja al final del Box (no antes de la Column) para quedar realmente
+        // encima de todo lo demás — Compose apila los hijos de un Box en el orden en
+        // que se declaran, y el overlay con scrim de TarjetaSabiasQue necesita ser el
+        // último para no quedar tapado por el contenido del reto.
+        estado.tarjetaSabiasQue?.let { dato ->
+            TarjetaSabiasQue(dato = dato, onCerrar = viewModel::cerrarTarjetaSabiasQue)
+        }
+    }
+}
+
+@Composable
+private fun ControlDeVariable(nombre: String, valor: Any, onCambia: (Any) -> Unit) {
+    when (valor) {
+        is Int -> PerillaGiratoria(valor = valor, rango = 0..20, etiqueta = nombre, onValorCambia = onCambia)
+        is Float -> PerillaGiratoria(
+            valor = valor.toInt(), rango = rangoDeVariableContinua(nombre), etiqueta = nombre,
+            onValorCambia = { onCambia(it.toFloat()) },
+        )
+        is Boolean -> InterruptorDiegetico(
+            activado = valor, onCambia = onCambia,
+            iconoActivado = R.drawable.chirimbolo_celebra, iconoDesactivado = R.drawable.chirimbolo_confundido,
+            descripcionActivado = "$nombre activado", descripcionDesactivado = "$nombre desactivado",
+        )
+        is TipoSuperficie -> SelectorBinario(
+            seleccionado = valor,
+            opciones = OpcionBinaria(TipoSuperficie.LISA, R.drawable.objeto_carrito, stringResource(R.string.isla_superficie_lisa)) to
+                OpcionBinaria(TipoSuperficie.RUGOSA, R.drawable.objeto_carrito, stringResource(R.string.isla_superficie_rugosa)),
+            onSeleccion = onCambia,
+        )
+        is TipoObstaculo -> SelectorBinario(
+            seleccionado = valor,
+            opciones = OpcionBinaria(TipoObstaculo.CARTON, R.drawable.objeto_iman, stringResource(R.string.isla_obstaculo_carton)) to
+                OpcionBinaria(TipoObstaculo.METAL_GRUESO, R.drawable.objeto_iman, stringResource(R.string.isla_obstaculo_metal_grueso)),
+            onSeleccion = onCambia,
+        )
+        else -> Unit
     }
 }
 

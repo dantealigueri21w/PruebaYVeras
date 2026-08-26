@@ -42,7 +42,11 @@ class IslaScreenTest {
      * El sembrado y la carga de retos corren en el executor propio de Room (un hilo de
      * fondo real), no en el reloj de Compose que sincroniza `waitForIdle()` — se espera
      * la condición real (sondeando con tiempo real) antes de confirmar que la pantalla
-     * de verdad se dibujó con contenido, no solo que "no reventó" con la pantalla vacía. */
+     * de verdad se dibujó con contenido, no solo que "no reventó" con la pantalla vacía.
+     *
+     * Con la mesa de tanteo (`MesaDeTanteo`), "Correr la prueba" está siempre visible
+     * apenas se carga el reto — nunca bloqueada, a diferencia del botón "¡Pruébalo!" de
+     * la mecánica anterior. */
     private fun rendear(idIsla: String) {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .allowMainThreadQueries().build()
@@ -60,7 +64,7 @@ class IslaScreenTest {
             pasadas++
         }
         assertTrue("los retos de $idIsla deben haberse cargado", viewModel.estado.value.retos.isNotEmpty())
-        compose.onNodeWithText("¡Pruébalo!").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Correr la prueba").performScrollTo().assertIsDisplayed()
     }
 
     @Test

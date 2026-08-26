@@ -2,13 +2,9 @@ package pe.appmobile.pruebayveras.ui.screens.isla
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeUp
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -16,15 +12,23 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import pe.appmobile.pruebayveras.data.AppDatabase
+import pe.appmobile.pruebayveras.data.seed.SemillaRetos
+import pe.appmobile.pruebayveras.domain.engine.Tendencia
 import pe.appmobile.pruebayveras.ui.testutil.viewModelDeTest
 import pe.appmobile.pruebayveras.ui.theme.PruebaYVerasTheme
 
+/**
+ * Prueba la mesa de tanteo real: correr nunca bloquea, una prueba injusta explica por
+ * qué y deja repetir, una prueba justa entrega la tarjeta "¿Sabías que...?" y avanza,
+ * y terminar la isla lleva a la pregunta de tendencia y a confirmar la pieza.
+ */
 @RunWith(RobolectricTestRunner::class)
 class IslaScreenInteraccionTest {
 
@@ -73,18 +77,28 @@ class IslaScreenInteraccionTest {
             compose.waitForIdle()
             pasadas++
         }
-        assertTrue("debe verse un resultado tras tocar ¡Pruébalo!", viewModel.estado.value.ultimoResultado != null)
+        assertTrue("debe verse un resultado tras correr la prueba", viewModel.estado.value.ultimoResultado != null)
+    }
+
+    /** Cierra la tarjeta "¿Sabías que...?" si está abierta — se gana en cada prueba
+     * justa y tapa el resto de la pantalla (scrim encima) hasta tocar "Continuar". Vive
+     * fuera de la Column con scroll (es un overlay sobre todo el Box), así que a
+     * diferencia de los botones de la pantalla del reto, no admite `performScrollTo()`. */
+    private fun cerrarTarjetaSiHayUna(viewModel: IslaViewModel) {
+        if (viewModel.estado.value.tarjetaSabiasQue != null) {
+            compose.onNodeWithText("Continuar").performClick()
+            compose.waitForIdle()
+        }
     }
 
     @Test
-    fun `probar en la Isla de la Marea guarda un intento real`() {
+    fun `correr la prueba en la Isla de la Marea guarda un intento real`() {
         val (viewModel, db) = cargarIsla("isla_marea")
 
-        // sal=8 da alturaFlotacion=5 con MotorFlotabilidad — la meta real del reto facil.
-        viewModel.cambiarVariablePrueba("sal", 8)
+        viewModel.cambiarVariablePrueba("sal", 3)
         compose.waitForIdle()
 
-        compose.onNodeWithText("¡Pruébalo!").performScrollTo().performClick()
+        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
         compose.waitForIdle()
 
         val intentos = runBlocking { db.intentoDao().observarPorReto("reto_marea_facil").first() }
@@ -92,115 +106,119 @@ class IslaScreenInteraccionTest {
     }
 
     @Test
-    fun `tras lograr la meta se ve el resultado, y Continuar avanza al siguiente reto`() {
+    fun `cambiar dos variables no bloquea la prueba, explica por que no es justa, y Volver a intentar reinicia el montaje`() {
         val (viewModel, _) = cargarIsla("isla_marea")
-        val indiceInicial = viewModel.estado.value.indiceRetoActual
 
-        viewModel.cambiarVariablePrueba("sal", 8)
+        // sal y volumenAgua distintas del control a la vez: dos variables cambiadas.
+        viewModel.cambiarVariablePrueba("sal", 3)
+        viewModel.cambiarVariablePrueba("volumenAgua", 500)
         compose.waitForIdle()
-        compose.onNodeWithText("¡Pruébalo!").performScrollTo().performClick()
+
+        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
         compose.waitForIdle()
         esperarResultado(viewModel)
 
-        assertTrue("la meta se logra con sal=8", viewModel.estado.value.ultimoResultado?.logrado == true)
-        compose.onNodeWithText("¡Lo lograste!", substring = true).assertIsDisplayed()
+        assertFalse("cambiar dos variables a la vez no es una prueba justa", viewModel.estado.value.ultimoResultado!!.fueJusta)
+        compose.onNodeWithText("Eso cambió más de una cosa", substring = true).assertIsDisplayed()
+
+        compose.onNodeWithText("Volver a intentar").performScrollTo().performClick()
+        compose.waitForIdle()
+
+        assertEquals("no debe avanzar de reto si la prueba no fue justa", 0, viewModel.estado.value.indiceRetoActual)
+        assertTrue("el resultado debe cerrarse para poder tantear de nuevo", viewModel.estado.value.ultimoResultado == null)
+        assertEquals("el montaje de prueba debe volver al control (sal=0)", 0, viewModel.estado.value.prueba.valorDe("sal"))
+        compose.onNodeWithText("Correr la prueba").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun `una prueba justa muestra el resultado y la tarjeta sabias que, y Continuar avanza al siguiente reto`() {
+        val (viewModel, _) = cargarIsla("isla_marea")
+        val indiceInicial = viewModel.estado.value.indiceRetoActual
+        val datoDelRetoFacil = SemillaRetos.retos.first { it.idReto == "reto_marea_facil" }.datoCientifico
+
+        viewModel.cambiarVariablePrueba("sal", 3)
+        compose.waitForIdle()
+        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
+        compose.waitForIdle()
+        esperarResultado(viewModel)
+
+        assertTrue("cambiar solo sal debe ser una prueba justa", viewModel.estado.value.ultimoResultado!!.fueJusta)
+        compose.onNodeWithText("¡Prueba justa!", substring = true).assertIsDisplayed()
 
         compose.onNodeWithText("Continuar").performScrollTo().performClick()
         compose.waitForIdle()
 
-        assertTrue("Continuar debe cerrar el panel de resultado", viewModel.estado.value.ultimoResultado == null)
         assertEquals(
-            "Continuar debe avanzar al siguiente reto cuando se logro la meta",
+            "una prueba justa debe entregar la tarjeta con el dato propio de ese reto",
+            datoDelRetoFacil,
+            viewModel.estado.value.tarjetaSabiasQue,
+        )
+        compose.onNodeWithText(datoDelRetoFacil, substring = true).assertIsDisplayed()
+
+        // La tarjeta es un overlay fuera de la Column con scroll — su botón "Continuar"
+        // no admite performScrollTo().
+        compose.onNodeWithText("Continuar").performClick()
+        compose.waitForIdle()
+
+        assertTrue("cerrar la tarjeta debe quitarla del estado", viewModel.estado.value.tarjetaSabiasQue == null)
+        assertEquals(
+            "Continuar debe avanzar al siguiente reto cuando la prueba fue justa",
             indiceInicial + 1,
             viewModel.estado.value.indiceRetoActual,
         )
     }
 
     @Test
-    fun `si no se logra la meta, Reintentar deja en el mismo reto con el control de nuevo`() {
+    fun `completar el ultimo reto de la isla con una prueba justa muestra la pregunta de tendencia`() {
         val (viewModel, _) = cargarIsla("isla_marea")
 
-        // sal=0 nunca llega a flotar (alturaFlotacion=0), lejos de la meta del reto facil (5).
-        viewModel.cambiarVariablePrueba("sal", 0)
-        compose.waitForIdle()
-        compose.onNodeWithText("¡Pruébalo!").performScrollTo().performClick()
-        compose.waitForIdle()
-        esperarResultado(viewModel)
-
-        assertTrue("sal=0 no deberia lograr la meta", viewModel.estado.value.ultimoResultado?.logrado == false)
-        compose.onNodeWithText("Todavía no", substring = true).assertIsDisplayed()
-
-        compose.onNodeWithText("Reintentar").performScrollTo().performClick()
-        compose.waitForIdle()
-
-        assertEquals("no debe avanzar de reto si no se logro la meta", 0, viewModel.estado.value.indiceRetoActual)
-        // El control (la perilla de "sal") debe estar visible de nuevo para reintentar.
-        compose.onNodeWithContentDescription("sal:", substring = true).assertIsDisplayed()
-    }
-
-    @Test
-    fun `un arrastre real dentro de la pantalla completa llega al limite superior del rango`() {
-        val (viewModel, _) = cargarIsla("isla_marea")
-        val perilla = compose.onNodeWithContentDescription("sal:", substring = true)
-
-        // Un solo arrastre continuo, muy por encima de lo necesario para cubrir 0..20.
-        // Si esto no llega a 20, algo detiene el gesto antes de que el dedo real lo haga
-        // (por ejemplo, el scroll vertical que envuelve la pantalla robandose el
-        // arrastre, o el calculo del paso quedando corto).
-        perilla.performTouchInput { swipeUp(startY = bottom, endY = bottom - 3000f, durationMillis = 3000) }
-        compose.waitForIdle()
-
-        val valorFinal = viewModel.estado.value.prueba.valorDe("sal") as Int
-        assertEquals(
-            "un arrastre de sobra deberia llegar al limite superior del rango (20), no quedarse a mitad de camino",
-            20,
-            valorFinal,
-        )
-    }
-
-    // Antes, la sensibilidad era una cantidad fija de pixeles por paso: un rango de
-    // 0..60 (variables continuas, ej. altura) necesitaba un arrastre casi tres veces mas
-    // largo que uno de 0..20 para completarse, y un arrastre comodo de un solo gesto se
-    // quedaba a mitad de camino en el rango ancho. Las dos pruebas siguientes usan
-    // exactamente el mismo largo de arrastre sobre un rango angosto y uno ancho: la
-    // perilla debe sentirse igual de jugable sin importar cuantos pasos tenga su rango.
-    private val distanciaComodaDeArrastre get() = with(compose.density) { 400.dp.toPx() }
-
-    @Test
-    fun `un arrastre comodo completa un rango angosto (sal, 0-20)`() {
-        val (viewModel, _) = cargarIsla("isla_marea")
-        compose.onNodeWithContentDescription("sal:", substring = true).performTouchInput {
-            swipeUp(startY = bottom, endY = bottom - distanciaComodaDeArrastre, durationMillis = 300)
-        }
-        compose.waitForIdle()
-
-        assertEquals(20, viewModel.estado.value.prueba.valorDe("sal") as Int)
-    }
-
-    @Test
-    fun `el mismo arrastre comodo tambien completa un rango ancho (altura, 0-60)`() {
-        val (viewModel, _) = cargarIsla("isla_viento")
-
-        // "altura" es la variable del reto dificil de esta isla — se avanza hasta ahi
-        // logrando facil y medio primero (los dos con "paracaidas").
-        repeat(2) {
-            viewModel.cambiarVariablePrueba("paracaidas", true)
-            viewModel.probar()
+        // Los tres retos de la Isla de la Marea (facil, medio, dificil) cambian "sal".
+        repeat(viewModel.estado.value.retos.size) {
+            viewModel.cambiarVariablePrueba("sal", 3)
+            compose.waitForIdle()
+            compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
+            compose.waitForIdle()
             esperarResultado(viewModel)
-            viewModel.continuarTrasResultado()
-        }
-        assertEquals("altura", viewModel.estado.value.retoActual?.variableIndependiente)
+            assertTrue("cambiar solo sal debe ser siempre una prueba justa", viewModel.estado.value.ultimoResultado!!.fueJusta)
 
-        compose.onNodeWithContentDescription("altura:", substring = true).performTouchInput {
-            swipeUp(startY = bottom, endY = bottom - distanciaComodaDeArrastre, durationMillis = 300)
+            compose.onNodeWithText("Continuar").performScrollTo().performClick()
+            compose.waitForIdle()
+            cerrarTarjetaSiHayUna(viewModel)
         }
+
+        assertTrue("tras el ultimo reto debe mostrarse la pregunta de tendencia", viewModel.estado.value.mostrarPreguntaTendencia)
+        compose.onNodeWithText("¿Qué muestran tus datos?").assertIsDisplayed()
+    }
+
+    @Test
+    fun `elegir la tendencia correcta en la pregunta final confirma la pieza de Chirimbolo`() {
+        val (viewModel, _) = cargarIsla("isla_marea")
+
+        repeat(viewModel.estado.value.retos.size) {
+            viewModel.cambiarVariablePrueba("sal", 3)
+            compose.waitForIdle()
+            compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
+            compose.waitForIdle()
+            esperarResultado(viewModel)
+            compose.onNodeWithText("Continuar").performScrollTo().performClick()
+            compose.waitForIdle()
+            cerrarTarjetaSiHayUna(viewModel)
+        }
+        assertTrue(viewModel.estado.value.mostrarPreguntaTendencia)
+
+        // Cada reto de este flujo solo aporta un dato real a su propio idReto — con un
+        // solo punto, MotorCuadernoDatos.tendenciaReal (necesita al menos dos para ver
+        // una tendencia) siempre concluye NO_CAMBIA para el ultimo reto.
+        viewModel.elegirTendencia(Tendencia.NO_CAMBIA)
         compose.waitForIdle()
 
-        assertEquals(
-            "el rango ancho (0..60) deberia completarse con el mismo arrastre que el angosto",
-            60f,
-            viewModel.estado.value.prueba.valorDe("altura") as Float,
-            0.01f,
-        )
+        var pasadas = 0
+        while (!viewModel.estado.value.piezaConfirmada && pasadas < 100) {
+            Thread.sleep(50)
+            compose.waitForIdle()
+            pasadas++
+        }
+        assertTrue("elegir la tendencia real debe confirmar la pieza", viewModel.estado.value.piezaConfirmada)
+        compose.onNodeWithText("Chirimbolo tiene una pieza más", substring = true).assertIsDisplayed()
     }
 }
