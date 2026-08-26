@@ -1,0 +1,105 @@
+package pe.appmobile.pruebayveras.ui.screens.isla
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import pe.appmobile.pruebayveras.data.AppDatabase
+import pe.appmobile.pruebayveras.data.entity.RetoEntity
+import pe.appmobile.pruebayveras.data.repository.CienciaLabRepository
+import pe.appmobile.pruebayveras.data.seed.SemillaPiezas
+import pe.appmobile.pruebayveras.domain.adapter.AdaptadorIsla
+import pe.appmobile.pruebayveras.domain.adapter.adaptadorDe
+import pe.appmobile.pruebayveras.domain.engine.MotorCuadernoDatos
+import pe.appmobile.pruebayveras.domain.engine.Tendencia
+import pe.appmobile.pruebayveras.domain.model.Montaje
+import pe.appmobile.pruebayveras.domain.model.Variable
+
+data class EstadoIsla(
+    val idIsla: String = "",
+    val retos: List<RetoEntity> = emptyList(),
+    val indiceRetoActual: Int = 0,
+    val prueba: Montaje = Montaje(emptyList()),
+    val ultimoAvisoInjusto: Boolean = false,
+    val resultadosPorReto: Map<String, Float> = emptyMap(),
+    val mostrarPreguntaTendencia: Boolean = false,
+    val piezaConfirmada: Boolean = false,
+)
+
+class IslaViewModel(private val db: AppDatabase, private val idIsla: String) : ViewModel() {
+
+    private val repository = CienciaLabRepository(db)
+    private val adaptador: AdaptadorIsla = adaptadorDe(idIsla)
+
+    private val _estado = MutableStateFlow(EstadoIsla(idIsla = idIsla, prueba = Montaje(adaptador.variablesBase)))
+    val estado: StateFlow<EstadoIsla> = _estado
+
+    init {
+        viewModelScope.launch {
+            repository.sembrarSiEsPrimeraVez()
+            val retos = db.retoDao().observarPorIsla(idIsla).first().sortedBy {
+                when (it.dificultad) {
+                    "FACIL" -> 0
+                    "MEDIO" -> 1
+                    else -> 2
+                }
+            }
+            _estado.value = _estado.value.copy(retos = retos)
+        }
+    }
+
+    fun cambiarVariablePrueba(nombre: String, valor: Any) {
+        val nuevasVariables = _estado.value.prueba.variables.map {
+            if (it.nombre == nombre) Variable(nombre, valor) else it
+        }
+        _estado.value = _estado.value.copy(prueba = Montaje(nuevasVariables), ultimoAvisoInjusto = false)
+    }
+
+    fun avisarPruebaInjusta() {
+        _estado.value = _estado.value.copy(ultimoAvisoInjusto = true)
+    }
+
+    fun ejecutarPrueba() {
+        val actual = _estado.value
+        val reto = actual.retos.getOrNull(actual.indiceRetoActual) ?: return
+        val control = Montaje(adaptador.variablesBase)
+        val resultadoControl = adaptador.calcular(control)
+        val resultadoPrueba = adaptador.calcular(actual.prueba)
+
+        viewModelScope.launch {
+            repository.registrarIntento(
+                idReto = reto.idReto,
+                variableCambiada = reto.variableIndependiente,
+                valorControl = control.valorDe(reto.variableIndependiente).toString(),
+                valorPrueba = actual.prueba.valorDe(reto.variableIndependiente).toString(),
+                resultadoControl = resultadoControl,
+                resultadoPrueba = resultadoPrueba,
+                fueJusta = true,
+            )
+
+            val resultados = actual.resultadosPorReto + (reto.idReto to resultadoPrueba)
+            val esUltimoReto = actual.indiceRetoActual == actual.retos.lastIndex
+
+            _estado.value = actual.copy(
+                resultadosPorReto = resultados,
+                indiceRetoActual = if (esUltimoReto) actual.indiceRetoActual else actual.indiceRetoActual + 1,
+                mostrarPreguntaTendencia = esUltimoReto,
+                prueba = Montaje(adaptador.variablesBase),
+            )
+        }
+    }
+
+    fun elegirTendencia(tendencia: Tendencia) {
+        val datos = _estado.value.resultadosPorReto.values.toList()
+        viewModelScope.launch {
+            val correcta = MotorCuadernoDatos.conclusionEsCorrecta(datos, tendencia)
+            if (correcta) {
+                val idPieza = SemillaPiezas.piezas.first { it.idIsla == idIsla }.idPieza
+                repository.confirmarPieza(idPieza)
+                _estado.value = _estado.value.copy(piezaConfirmada = true)
+            }
+        }
+    }
+}
