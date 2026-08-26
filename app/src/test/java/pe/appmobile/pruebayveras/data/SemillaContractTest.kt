@@ -33,6 +33,15 @@ class SemillaContractTest {
     }
 
     @Test
+    fun `los 27 retos tienen direccion esperada valida y dato cientifico no vacio`() {
+        val direccionesValidas = setOf("SUBE", "BAJA", "NO_CAMBIA")
+        SemillaRetos.retos.forEach { reto ->
+            assertTrue("${reto.idReto} tiene direccionEsperada inválida", reto.direccionEsperada in direccionesValidas)
+            assertTrue("${reto.idReto} no tiene datoCientifico", reto.datoCientifico.isNotBlank())
+        }
+    }
+
+    @Test
     fun `dos islas empiezan sin requisito de desbloqueo, marea y viento`() {
         val sinRequisito = SemillaIslas.islas.filter { it.requisitoDesbloqueo == null }
         assertEquals(2, sinRequisito.size)

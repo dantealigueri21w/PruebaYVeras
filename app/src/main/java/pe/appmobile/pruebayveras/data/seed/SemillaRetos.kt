@@ -2,116 +2,132 @@ package pe.appmobile.pruebayveras.data.seed
 
 import pe.appmobile.pruebayveras.data.entity.RetoEntity
 
-/**
- * `valorObjetivo` y `margenObjetivo` de cada reto se calcularon a mano contra la
- * fórmula real del motor de su isla (nunca a ojo — ver `docs/superpowers/specs/
- * 2026-08-26-mecanica-logro-tocar-y-ver.md`, sección 4.1, para el detalle isla por
- * isla). El margen es más ancho en fácil y más angosto en difícil, pero la escala
- * absoluta la fija cada motor (0-17 en Marea, 0-6 en Faro, etc.), así que no sale de
- * una fórmula única — se verificó reto por reto que el objetivo sea alcanzable dentro
- * del rango real de la variable.
- */
 object SemillaRetos {
     val retos = listOf(
-        // Isla de la Marea — MotorFlotabilidad: alturaFlotacion = max(0, sal - 3)
+        // Isla de la Marea — sal sube la flotación; el volumen de agua es el señuelo
         RetoEntity("reto_marea_facil", "isla_marea", "FACIL",
-            "Chirimbolo dice: \"este huevo no se hunde igual en todos los charcos. Pongo dos " +
-                "charcos con la misma agua: a uno le echo sal, al otro no. ¿Será la sal la que " +
-                "cambia si flota?\"", "sal", valorObjetivo = 5f, margenObjetivo = 1.75f),
+            "Chirimbolo dice: \"este huevo no se hunde igual en todos los charcos. ¿Será la sal?\"",
+            "sal", "SUBE",
+            "Un huevo fresco se hunde en agua dulce, pero flota en agua con suficiente sal: el Mar Muerto tiene tanta sal que una persona flota sola, sin nadar."),
         RetoEntity("reto_marea_medio", "isla_marea", "MEDIO",
-            "Una isleña pregunta si el volumen de agua también cambia si el huevo flota.", "sal",
-            valorObjetivo = 9f, margenObjetivo = 1.8f),
+            "Una isleña pregunta si el volumen de agua también cambia si el huevo flota.",
+            "sal", "SUBE",
+            "La densidad del agua salada no depende de cuánta agua haya: un charco chico y una piscina con la misma sal por litro flotan el huevo exactamente igual."),
         RetoEntity("reto_marea_dificil", "isla_marea", "DIFICIL",
-            "Chirimbolo quiere que el huevo llegue justo a la marca del vaso — ni que se hunda, " +
-                "ni que flote de más.", "sal", valorObjetivo = 15f, margenObjetivo = 1.5f),
+            "Prueba con 1, 3 y 6 cucharadas de sal y arma la tendencia completa de cuánto flota.",
+            "sal", "SUBE",
+            "Los barcos aprovechan esto al revés: en agua de mar (más densa) flotan con más carga que en un río de agua dulce."),
 
-        // Isla del Viento — MotorCaida: con paracaidas x3.5 mas lento; altura por sqrt
+        // Isla del Viento — el paracaídas frena la caída; la altura es el señuelo
         RetoEntity("reto_viento_facil", "isla_viento", "FACIL",
-            "Chirimbolo quiere saber si su aleta lo ayuda a caer más despacio. Suelta dos " +
-                "Chirimbolos iguales desde la misma altura: uno con la aleta puesta, el otro sin " +
-                "ella. ¿Cuál llega primero?", "paracaidas", valorObjetivo = 7.07f, margenObjetivo = 2.5f),
+            "Chirimbolo quiere saber si su aleta lo ayuda a caer más despacio, como un paracaídas.",
+            "paracaidas", "BAJA",
+            "Un paracaídas real no detiene la caída: aumenta tanto el roce con el aire que la velocidad deja de crecer mucho antes de tocar el suelo."),
         RetoEntity("reto_viento_medio", "isla_viento", "MEDIO",
-            "Un isleño duda si la altura también cambia cuánto tarda en llegar al suelo.", "paracaidas",
-            valorObjetivo = 7.07f, margenObjetivo = 1.4f),
+            "Un isleño duda si la altura también cambia cuánto tarda en llegar al suelo.",
+            "paracaidas", "BAJA",
+            "Sin aire (como en la Luna), una pluma y un martillo caen exactamente a la misma velocidad — lo probó un astronauta del Apolo 15 en vivo."),
         RetoEntity("reto_viento_dificil", "isla_viento", "DIFICIL",
-            "Ajusta la altura para que Chirimbolo aterrice suave, justo dentro del círculo marcado.",
-            "altura", valorObjetivo = 2.79f, margenObjetivo = 0.3f),
+            "Prueba desde tres alturas distintas y arma la tendencia del tiempo de caída.",
+            "altura", "SUBE",
+            "El tiempo de caída no crece en línea recta con la altura: para caer el doble de alto no se tarda el doble, se tarda ese doble multiplicado por 1.4 aproximadamente."),
 
-        // Isla del Jardín — MotorGerminacion: crecimiento = (1.2 con luz / 0.4 sin luz) * dias
+        // Isla del Jardín — la luz apura la germinación; el agua es el señuelo de este reto
         RetoEntity("reto_jardin_facil", "isla_jardin", "FACIL",
-            "Chirimbolo tiene una hojita que le creció sola. ¿Necesita luz para crecer más?", "luz",
-            valorObjetivo = 6f, margenObjetivo = 2.1f),
+            "Chirimbolo tiene una hojita que le creció sola. ¿Necesita luz para crecer más?",
+            "luz", "SUBE",
+            "Las primeras hojas de una semilla usan la reserva de energía guardada en ella misma — recién con luz empiezan a fabricar su propio alimento con fotosíntesis."),
         RetoEntity("reto_jardin_medio", "isla_jardin", "MEDIO",
-            "Una isleña quiere saber si sin agua la hojita crece igual, con o sin luz.", "agua",
-            valorObjetivo = 6f, margenObjetivo = 1.2f),
+            "Una isleña quiere saber si sin agua la hojita crece igual, con o sin luz.",
+            "luz", "SUBE",
+            "Sin agua ninguna semilla germina, tenga luz o no: el agua ablanda la cáscara y activa las reacciones internas que empiezan a formar la raíz."),
         RetoEntity("reto_jardin_dificil", "isla_jardin", "DIFICIL",
-            "Cuenta los días justos para que la hojita llegue exactamente a la marca de altura.",
-            "dias", valorObjetivo = 18f, margenObjetivo = 1.8f),
+            "Prueba el crecimiento a los 2, 5 y 8 días y arma la tendencia completa.",
+            "dias", "SUBE",
+            "El crecimiento de una planta joven no es parejo día a día: casi siempre arranca lento, después acelera de golpe cuando la raíz ya se afirmó."),
 
-        // Isla de la Cueva — MotorEco: intensidad = max(0, 100 - distancia*8) * (0.4 con material)
+        // Isla de la Cueva — más distancia debilita el eco; el material es el señuelo
         RetoEntity("reto_cueva_facil", "isla_cueva", "FACIL",
-            "Chirimbolo no está seguro de si su tímpano de lata escucha bien de lejos.", "distancia",
-            valorObjetivo = 40f, margenObjetivo = 14f),
+            "Chirimbolo no está seguro de si su tímpano de lata escucha bien de lejos.",
+            "distancia", "BAJA",
+            "El eco existe porque el sonido tarda en volver: se necesitan al menos unos 17 metros hasta la pared para que el oído humano distinga el eco del sonido original."),
         RetoEntity("reto_cueva_medio", "isla_cueva", "MEDIO",
-            "Un isleño pregunta si una tela puesta en la pared cambia el eco.", "material",
-            valorObjetivo = 8f, margenObjetivo = 1.6f),
+            "Un isleño pregunta si una tela puesta en la pared cambia el eco.",
+            "distancia", "BAJA",
+            "Los estudios de grabación cubren las paredes con espuma justamente para absorber el sonido y que no rebote — lo mismo que un material blando le hace al eco de una cueva."),
         RetoEntity("reto_cueva_dificil", "isla_cueva", "DIFICIL",
-            "Ubica la fuente de sonido a la distancia justa para que el eco haga sonar la " +
-                "campanita marcada.", "distancia", valorObjetivo = 64f, margenObjetivo = 6.4f),
+            "Prueba a tres distancias distintas y arma la tendencia de la intensidad del eco.",
+            "distancia", "BAJA",
+            "El sonido pierde fuerza con la distancia mucho más rápido de lo que parece: al doblar la distancia, la intensidad que llega cae a una cuarta parte, no a la mitad."),
 
-        // Isla del Faro — MotorEstatica: papelitos = min(10, frotadas / 3)
+        // Isla del Faro — más frotadas atraen más papelitos; la distancia es la nueva variable real
         RetoEntity("reto_faro_facil", "isla_faro", "FACIL",
             "Chirimbolo frotó su antena contra su propio brazo y ahora atrae cosas. ¿Frotar más ayuda?",
-            "frotadas", valorObjetivo = 3f, margenObjetivo = 1.05f),
+            "frotadas", "SUBE",
+            "Frotar dos materiales distintos transfiere electrones de uno a otro: el que se queda con más carga es el que después atrae los papelitos."),
         RetoEntity("reto_faro_medio", "isla_faro", "MEDIO",
-            "Una isleña quiere saber si la distancia a los papelitos también importa.", "frotadas",
-            valorObjetivo = 4f, margenObjetivo = 0.8f),
+            "Una isleña quiere saber si la distancia a los papelitos también importa.",
+            "frotadas", "SUBE",
+            "La fuerza de atracción eléctrica cae rápido con la distancia — es la misma razón por la que un globo con estática solo atrae el pelo si lo acercas bastante."),
         RetoEntity("reto_faro_dificil", "isla_faro", "DIFICIL",
-            "Frota el globo las veces justas para atraer exactamente los papelitos marcados.",
-            "frotadas", valorObjetivo = 6f, margenObjetivo = 0.6f),
+            "Prueba con 3, 9 y 15 frotadas y arma la tendencia de cuántos papelitos atrae.",
+            "frotadas", "SUBE",
+            "La carga estática se escapa sola con el tiempo, sobre todo en días húmedos: el aire con más agua ayuda a que los electrones de más se dispersen."),
 
-        // Isla de las Olas — MotorDisolucion: tiempo = max(5, 60 - temperatura)
+        // Isla de las Olas — más temperatura disuelve más rápido; el azúcar es la nueva variable real
         RetoEntity("reto_olas_facil", "isla_olas", "FACIL",
             "Chirimbolo tiene una junta oxidada. ¿El agua tibia la afloja más rápido que la fría?",
-            "temperatura", valorObjetivo = 50f, margenObjetivo = 6f),
+            "temperatura", "BAJA",
+            "El agua caliente tiene sus moléculas moviéndose más rápido, así que chocan más veces por segundo contra el sólido y lo disuelven antes."),
         RetoEntity("reto_olas_medio", "isla_olas", "MEDIO",
-            "Un isleño pregunta si la cantidad de azúcar también cambia el tiempo.", "temperatura",
-            valorObjetivo = 48f, margenObjetivo = 4f),
+            "Un isleño pregunta si la cantidad de azúcar también cambia el tiempo.",
+            "temperatura", "BAJA",
+            "Un vaso de agua tiene un límite de cuánta azúcar puede disolver — pasado ese punto, el azúcar de más se queda entera en el fondo por más que se espere."),
         RetoEntity("reto_olas_dificil", "isla_olas", "DIFICIL",
-            "Ajusta la temperatura del agua para que el azúcar se disuelva justo antes de que se " +
-                "acabe el tiempo.", "temperatura", valorObjetivo = 45f, margenObjetivo = 2f),
+            "Prueba con agua a 5, 20 y 40 grados y arma la tendencia del tiempo de disolución.",
+            "temperatura", "BAJA",
+            "Revolver el agua no cambia cuánto se disuelve al final, pero sí acelera cuánto tarda: acerca azúcar nueva a la superficie del sólido en vez de esperar a que llegue sola."),
 
-        // Isla del Risco — MotorFriccion: distancia = altura*4 / (1 + coeficiente*10)
+        // Isla del Risco — la superficie rugosa frena más el carrito; la altura es el señuelo
         RetoEntity("reto_risco_facil", "isla_risco", "FACIL",
             "Chirimbolo quiere saber si sus patas agarran mejor una rampa lisa o una rugosa.",
-            "superficie", valorObjetivo = 60f, margenObjetivo = 12f),
+            "superficie", "BAJA",
+            "La fricción no depende de cuánta superficie toca el objeto, sino de qué tan ásperas son las dos caras que se rozan — por eso un carrito chico y uno grande frenan casi igual en la misma rampa."),
         RetoEntity("reto_risco_medio", "isla_risco", "MEDIO",
-            "Una isleña pregunta si la altura de la rampa también cambia la distancia.", "superficie",
-            valorObjetivo = 17.1f, margenObjetivo = 3.4f),
+            "Una isleña pregunta si la altura de la rampa también cambia la distancia.",
+            "superficie", "BAJA",
+            "Una rampa más alta no cambia la fricción de la superficie: lo que cambia es la velocidad con la que el carrito llega abajo, y por eso recorre más distancia."),
         RetoEntity("reto_risco_dificil", "isla_risco", "DIFICIL",
-            "Ajusta la altura para que el carrito se detenga justo en la zona marcada del suelo.",
-            "altura", valorObjetivo = 90f, margenObjetivo = 9f),
+            "Prueba la misma superficie en tres alturas y arma la tendencia de la distancia recorrida.",
+            "altura", "SUBE",
+            "Los ingenieros de pistas de patinaje calculan la fricción del material antes de construir, porque muy poca fricción hace la pista peligrosa e imposible de frenar."),
 
-        // Isla del Imán — MotorMagnetismo: se mueve (1) si grosor <= 5 mm, si no, no (0)
+        // Isla del Imán — más grosor de obstáculo debilita el imán; el material es el señuelo
         RetoEntity("reto_iman_facil", "isla_iman", "FACIL",
-            "Chirimbolo no sabe si su imán interno sigue funcionando bajo un poco de arena.", "grosor",
-            valorObjetivo = 1f, margenObjetivo = 0.6f),
+            "Chirimbolo no sabe si su imán interno sigue funcionando bajo un poco de arena.",
+            "grosor", "BAJA",
+            "El campo magnético de un imán se debilita con la distancia al objeto, así que entre más grueso el obstáculo, más lejos queda el imán del clip en los hechos."),
         RetoEntity("reto_iman_medio", "isla_iman", "MEDIO",
-            "Un isleño duda si el tipo de material entre el imán y el clip también importa.", "material",
-            valorObjetivo = 1f, margenObjetivo = 0.6f),
+            "Un isleño duda si el tipo de material entre el imán y el clip también importa.",
+            "grosor", "BAJA",
+            "El magnetismo atraviesa el papel, la tela o el plástico casi sin perder fuerza — pero no atraviesa el metal grueso, que además puede desviar el campo."),
         RetoEntity("reto_iman_dificil", "isla_iman", "DIFICIL",
-            "Encuentra el grosor justo para que el clip todavía se mueva con el imán.", "grosor",
-            valorObjetivo = 1f, margenObjetivo = 0.3f),
+            "Prueba con tres grosores distintos y arma la tendencia de si el clip se mueve.",
+            "grosor", "BAJA",
+            "Los imanes de neodimio, mucho más fuertes que uno común, se usan justo donde hace falta atravesar materiales gruesos, como en discos duros de computadora."),
 
-        // Isla del Reflejo — MotorAbsorcionLuz: temperatura = minutos * (0.8 oscuro / 0.3 claro)
+        // Isla del Reflejo — el color oscuro absorbe más calor; los minutos son el señuelo de este reto
         RetoEntity("reto_reflejo_facil", "isla_reflejo", "FACIL",
-            "Chirimbolo se preocupa de que su placa oscura se calienta más que la clara.", "color",
-            valorObjetivo = 8f, margenObjetivo = 3f),
+            "Chirimbolo se preocupa de que su placa oscura se calienta más que la clara.",
+            "color", "SUBE",
+            "Un auto oscuro estacionado al sol puede quedar bastante más caliente por dentro que uno claro, en el mismo lugar y a la misma hora."),
         RetoEntity("reto_reflejo_medio", "isla_reflejo", "MEDIO",
-            "Una isleña pregunta si el tiempo al sol también cambia cuánto se calienta.", "color",
-            valorObjetivo = 3f, margenObjetivo = 1.5f),
+            "Una isleña pregunta si el tiempo al sol también cambia cuánto se calienta.",
+            "color", "SUBE",
+            "La ropa de color claro se usa en climas calurosos justamente porque refleja más luz solar y absorbe menos calor que la ropa oscura."),
         RetoEntity("reto_reflejo_dificil", "isla_reflejo", "DIFICIL",
-            "Ajusta los minutos al sol para que la tela llegue justo a la temperatura marcada.",
-            "minutos", valorObjetivo = 13f, margenObjetivo = 1.5f),
+            "Prueba a los 5, 10 y 20 minutos al sol y arma la tendencia de la temperatura.",
+            "minutos", "SUBE",
+            "Los techos blancos que se usan en algunas ciudades calurosas reflejan tanta luz solar que bajan varios grados la temperatura dentro del edificio, sin usar electricidad."),
     )
 }
