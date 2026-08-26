@@ -21,6 +21,24 @@
     <string name="isla_completada_titulo">¡Isla completada! Chirimbolo tiene una pieza más.</string>
     <string name="isla_completada_volver">Volver al Archipiélago</string>
 
+    <string name="isla_meta_sube">Meta: que suba más que el control</string>
+    <string name="isla_meta_baja">Meta: que baje más que el control</string>
+    <string name="isla_meta_no_cambia">Meta: que quede igual que el control</string>
+    <string name="isla_ayuda_titulo">Una pista</string>
+    <string name="isla_ayuda_texto">Prueba a cambiar solo %1$s esta vez, y deja todo lo demás exactamente igual que en el Control.</string>
+    <string name="cd_ayuda">Pedir ayuda</string>
+
+    <string name="isla_prueba_injusta_titulo">Eso cambió más de una cosa</string>
+    <string name="isla_prueba_injusta_explicacion">Cambiaste %1$s a la vez, así que no podemos saber cuál de esas causó el resultado. Iguala todo menos una cosa y vuelve a correr la prueba.</string>
+    <string name="isla_prueba_justa_titulo">¡Prueba justa!</string>
+    <string name="isla_reintentar">Volver a intentar</string>
+    <string name="isla_ver_dato">Ver el dato</string>
+    <string name="isla_sabias_que_titulo">¿Sabías que...?</string>
+    <string name="isla_pregunta_tendencia">¿Qué muestran tus datos?</string>
+    <string name="isla_tendencia_sube">Sube</string>
+    <string name="isla_tendencia_baja">Baja</string>
+    <string name="isla_tendencia_no_cambia">No cambia</string>
+
     <string name="cobertizo_titulo">El Cobertizo de Chirimbolo</string>
     <string name="cobertizo_pieza_confirmada">Confirmada</string>
     <string name="cobertizo_pieza_dudosa">Todavía dudosa</string>
