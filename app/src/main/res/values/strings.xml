@@ -14,10 +14,7 @@
     <string name="isla_obstaculo_metal_grueso">Metal grueso</string>
     <string name="valor_si">Sí</string>
     <string name="valor_no">No</string>
-    <string name="isla_logro_titulo">¡Lo lograste!</string>
-    <string name="isla_logro_casi">Todavía no — ¡puedes intentarlo de nuevo!</string>
     <string name="isla_resultado_continuar">Continuar</string>
-    <string name="isla_logro_reintentar">Reintentar</string>
     <string name="isla_completada_titulo">¡Isla completada! Chirimbolo tiene una pieza más.</string>
     <string name="isla_completada_volver">Volver al Archipiélago</string>
 
@@ -31,6 +28,7 @@
     <string name="isla_prueba_injusta_titulo">Eso cambió más de una cosa</string>
     <string name="isla_prueba_injusta_explicacion">Cambiaste %1$s a la vez, así que no podemos saber cuál de esas causó el resultado. Iguala todo menos una cosa y vuelve a correr la prueba.</string>
     <string name="isla_prueba_justa_titulo">¡Prueba justa!</string>
+    <string name="isla_resultado_control_prueba">Control: %1$s   Prueba: %2$s</string>
     <string name="isla_reintentar">Volver a intentar</string>
     <string name="isla_sabias_que_titulo">¿Sabías que...?</string>
     <string name="isla_pregunta_tendencia">¿Qué muestran tus datos?</string>

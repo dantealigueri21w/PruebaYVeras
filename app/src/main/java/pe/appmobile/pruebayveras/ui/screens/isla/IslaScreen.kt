@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import java.util.Locale
 import pe.appmobile.pruebayveras.R
 import pe.appmobile.pruebayveras.domain.adapter.adaptadorDe
 import pe.appmobile.pruebayveras.domain.engine.Tendencia
@@ -61,7 +62,11 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
         IconButton(onClick = onVolver, modifier = Modifier.padding(8.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_volver))
         }
-        AyudaFlotante(reto = estado.retoActual, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
+        // Sin reto en curso de verdad (isla ya completada, o esperando la respuesta de
+        // tendencia del último reto ya resuelto) no hay pista que dar — el retoActual
+        // que quedaría ahí es el del desafío ya cerrado, no uno activo.
+        val retoParaAyuda = if (estado.piezaConfirmada || estado.mostrarPreguntaTendencia) null else estado.retoActual
+        AyudaFlotante(reto = retoParaAyuda, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
 
         Column(
             modifier = Modifier
@@ -124,8 +129,11 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
                             Text(stringResource(R.string.isla_prueba_injusta_explicacion, resultado.variablesDistintas.joinToString(", ")))
                         }
                         Text(
-                            "${stringResource(R.string.isla_montaje_control)}: ${resultado.resultadoControl}   " +
-                                "${stringResource(R.string.isla_montaje_prueba)}: ${resultado.resultadoPrueba}",
+                            stringResource(
+                                R.string.isla_resultado_control_prueba,
+                                formatearResultado(resultado.resultadoControl),
+                                formatearResultado(resultado.resultadoPrueba),
+                            ),
                         )
                         Button(onClick = viewModel::continuarTrasResultado, modifier = Modifier.padding(top = 12.dp)) {
                             Text(if (resultado.fueJusta) stringResource(R.string.isla_resultado_continuar) else stringResource(R.string.isla_reintentar))
@@ -184,3 +192,7 @@ private fun rangoDeVariableContinua(nombre: String): IntRange = when (nombre) {
     "distancia" -> 0..15
     else -> 0..60
 }
+
+/** Un motor de fenómeno puede devolver algo como 12.499998 — se redondea a un
+ * decimal para que el panel de resultado se lea pulido, no como un valor crudo. */
+private fun formatearResultado(valor: Float): String = String.format(Locale.getDefault(), "%.1f", valor)
