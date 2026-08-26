@@ -35,9 +35,10 @@ class IslaScreenTest {
         store.clear()
     }
 
-    /** `setContent` solo puede llamarse una vez por test — de ahí un test por isla,
-     * en vez de un bucle dentro de un solo test (sección 10.1: cada pantalla alcanzable
-     * necesita su propio render real).
+    /** Carga el ViewModel de la isla y renderiza `IslaScreen` de verdad, devolviendo el
+     * ViewModel para que el test pueda seguir interactuando con él (por ejemplo, correr
+     * la prueba y esperar el resultado) en vez de solo confirmar que la pantalla no
+     * revienta.
      *
      * El sembrado y la carga de retos corren en el executor propio de Room (un hilo de
      * fondo real), no en el reloj de Compose que sincroniza `waitForIdle()` — se espera
@@ -47,13 +48,6 @@ class IslaScreenTest {
      * Con la mesa de tanteo (`MesaDeTanteo`), "Correr la prueba" está siempre visible
      * apenas se carga el reto — nunca bloqueada, a diferencia del botón "¡Pruébalo!" de
      * la mecánica anterior. */
-    private fun rendear(idIsla: String) {
-        cargarViewModel(idIsla)
-    }
-
-    /** Igual que [rendear], pero devuelve el ViewModel ya cargado para que el test
-     * pueda seguir interactuando con él (por ejemplo, correr la prueba y esperar el
-     * resultado) en vez de solo confirmar que la pantalla no revienta. */
     private fun cargarViewModel(idIsla: String): IslaViewModel {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .allowMainThreadQueries().build()
@@ -73,6 +67,13 @@ class IslaScreenTest {
         assertTrue("los retos de $idIsla deben haberse cargado", viewModel.estado.value.retos.isNotEmpty())
         compose.onNodeWithText("Correr la prueba").performScrollTo().assertIsDisplayed()
         return viewModel
+    }
+
+    /** [cargarViewModel] descartando el ViewModel — un test por isla (sección 10.1:
+     * cada pantalla alcanzable necesita su propio render real; `setContent` solo puede
+     * llamarse una vez por test, así que no hay forma de recorrerlas en un bucle). */
+    private fun rendear(idIsla: String) {
+        cargarViewModel(idIsla)
     }
 
     @Test
@@ -110,6 +111,9 @@ class IslaScreenTest {
         // pero fuera del viewport visible. Lo que importa aquí es que exista.
         compose.onNodeWithText("Chirimbolo señala", substring = true).assertExists()
 
+        // Mismo motivo que el sondeo de cargarViewModel: ejecutarPrueba() guarda el
+        // intento en Room desde una corrutina de viewModelScope, en un hilo de fondo
+        // real ajeno al reloj de Compose — se espera la condición real, no waitForIdle().
         viewModel.ejecutarPrueba()
         var pasadas = 0
         while (viewModel.estado.value.ultimoResultado == null && pasadas < 100) {

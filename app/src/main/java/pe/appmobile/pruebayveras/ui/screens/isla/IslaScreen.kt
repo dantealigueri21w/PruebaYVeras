@@ -98,10 +98,13 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(chirimboloPose("senala")),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.cd_chirimbolo),
                             modifier = Modifier.size(64.dp),
                         )
-                        PanelLegible {
+                        // weight(1f) obligatorio: mismo caso que la lección ya documentada
+                        // en MesaDeTanteo.kt (columna con ancho cero por PanelLegible sin
+                        // weight junto a un elemento de ancho fijo en una Row).
+                        PanelLegible(modifier = Modifier.weight(1f)) {
                             Text(stringResource(R.string.isla_tutorial_texto), style = MaterialTheme.typography.bodyMedium)
                         }
                     }
