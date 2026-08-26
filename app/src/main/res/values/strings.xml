@@ -5,6 +5,9 @@
     <string name="archipielago_descripcion_mapa">Mapa del archipiélago de islas de prueba</string>
 
     <string name="isla_boton_probar">¡Pruébalo!</string>
+    <string name="isla_boton_correr">Correr la prueba</string>
+    <string name="isla_montaje_control">Control</string>
+    <string name="isla_montaje_prueba">Prueba</string>
     <string name="isla_superficie_lisa">Superficie lisa</string>
     <string name="isla_superficie_rugosa">Superficie rugosa</string>
     <string name="isla_obstaculo_carton">Cartón</string>
