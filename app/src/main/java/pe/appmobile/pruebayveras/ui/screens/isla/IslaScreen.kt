@@ -6,9 +6,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,6 +36,7 @@ import pe.appmobile.pruebayveras.ui.components.MesaDoblePrueba
 import pe.appmobile.pruebayveras.ui.components.OpcionBinaria
 import pe.appmobile.pruebayveras.ui.components.PerillaGiratoria
 import pe.appmobile.pruebayveras.ui.components.SelectorBinario
+import pe.appmobile.pruebayveras.ui.theme.chirimboloPose
 import pe.appmobile.pruebayveras.ui.theme.fondoDeIsla
 
 @Composable
@@ -48,15 +54,29 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
             contentScale = ContentScale.Crop,
         )
 
+        IconButton(onClick = onVolver, modifier = Modifier.padding(8.dp)) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.cd_volver),
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+                .padding(top = 56.dp, start = 24.dp, end = 24.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (reto != null) {
-                GloboDialogoChirimbolo(texto = reto.textoCorazonada)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(chirimboloPose("explica")),
+                        contentDescription = stringResource(R.string.cd_chirimbolo),
+                        modifier = Modifier.size(80.dp),
+                    )
+                    GloboDialogoChirimbolo(texto = reto.textoCorazonada)
+                }
 
                 MesaDoblePrueba(
                     control = Montaje(adaptadorDe(estado.idIsla).variablesBase),

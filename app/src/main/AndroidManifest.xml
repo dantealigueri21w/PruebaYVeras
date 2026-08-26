@@ -4,6 +4,7 @@
     <application
         android:allowBackup="false"
         android:label="@string/app_name"
+        android:icon="@drawable/icono_lanzador"
         android:theme="@style/Theme.PruebaYVeras">
         <activity
             android:name=".MainActivity"
