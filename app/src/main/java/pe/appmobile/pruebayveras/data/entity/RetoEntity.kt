@@ -10,12 +10,11 @@ data class RetoEntity(
     val dificultad: String,
     val textoCorazonada: String,
     val variableIndependiente: String,
-    /** El valor real que debe dar el motor de esta isla para considerarse logrado —
-     * verificado contra la fórmula real del motor, nunca puesto a ojo. */
-    val valorObjetivo: Float,
-    /** Tolerancia alrededor de [valorObjetivo]: más ancha en fácil, más angosta en
-     * difícil — calculada a mano por reto porque cada motor devuelve resultados en
-     * una escala distinta (0-17 en Marea, 0-6 en Faro, etc.). */
-    val margenObjetivo: Float,
+    /** "SUBE", "BAJA" o "NO_CAMBIA" — la meta direccional que se muestra antes de
+     * tocar nada, nunca un número exacto que cazar. */
+    val direccionEsperada: String,
+    /** Dato científico real, la tarjeta que se gana al terminar este reto en una
+     * prueba justa — no una recompensa genérica, texto propio de este reto. */
+    val datoCientifico: String,
     val completado: Boolean = false,
 )

@@ -8,8 +8,10 @@ data class IntentoEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val idReto: String,
     val variableCambiada: String,
-    val valorProbado: String,
-    val resultadoReal: Float,
-    val logrado: Boolean,
+    val valorControl: String,
+    val valorPrueba: String,
+    val resultadoControl: Float,
+    val resultadoPrueba: Float,
+    val fueJusta: Boolean,
     val timestamp: Long,
 )
