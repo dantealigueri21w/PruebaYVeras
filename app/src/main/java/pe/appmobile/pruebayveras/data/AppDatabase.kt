@@ -30,7 +30,7 @@ import pe.appmobile.pruebayveras.data.entity.RetoEntity
         InsigniaEntity::class,
         RachaEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

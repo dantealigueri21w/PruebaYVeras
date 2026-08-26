@@ -10,6 +10,11 @@ object AppDatabaseProvider {
         instancia ?: synchronized(this) {
             instancia ?: Room.databaseBuilder(
                 context.applicationContext, AppDatabase::class.java, "pruebayveras.db",
-            ).build().also { instancia = it }
+            )
+                // Todavia no hay datos reales de usuario que conservar entre versiones
+                // (solo semillas re-generadas en cada primer arranque) — no hace falta
+                // escribir una migracion real por cada cambio de esquema en desarrollo.
+                .fallbackToDestructiveMigration(dropAllTables = true)
+                .build().also { instancia = it }
         }
 }

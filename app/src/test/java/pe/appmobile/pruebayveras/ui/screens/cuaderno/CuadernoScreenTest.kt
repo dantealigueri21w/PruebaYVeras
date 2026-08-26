@@ -12,7 +12,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import pe.appmobile.pruebayveras.data.AppDatabase
-import pe.appmobile.pruebayveras.data.entity.IntentoEntity
 import pe.appmobile.pruebayveras.data.entity.PaginaCuadernoEntity
 import pe.appmobile.pruebayveras.ui.testutil.viewModelDeTest
 import pe.appmobile.pruebayveras.ui.theme.PruebaYVerasTheme
@@ -48,7 +47,7 @@ class CuadernoScreenTest {
             .allowMainThreadQueries().build()
         kotlinx.coroutines.runBlocking {
             db.paginaCuadernoDao().guardar(
-                PaginaCuadernoEntity(idReto = "reto_marea_facil", tendenciaElegida = "SUBE", tendenciaCorrecta = true, timestamp = 1000L),
+                PaginaCuadernoEntity(idReto = "reto_marea_facil", resultadoReal = 5f, timestamp = 1000L),
             )
         }
         val viewModel = viewModelDeTest(store, CuadernoViewModel::class.java) { CuadernoViewModel(db) }
@@ -64,16 +63,8 @@ class CuadernoScreenTest {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .allowMainThreadQueries().build()
         kotlinx.coroutines.runBlocking {
-            db.intentoDao().guardar(
-                IntentoEntity(
-                    idReto = "reto_marea_facil", variableCambiada = "sal",
-                    valorControl = "0", valorPrueba = "3",
-                    resultadoControl = 1.0f, resultadoPrueba = 2.5f,
-                    fueJusta = true, timestamp = 1000L,
-                ),
-            )
             db.paginaCuadernoDao().guardar(
-                PaginaCuadernoEntity(idReto = "reto_marea_facil", tendenciaElegida = "SUBE", tendenciaCorrecta = true, timestamp = 1000L),
+                PaginaCuadernoEntity(idReto = "reto_marea_facil", resultadoReal = 5f, timestamp = 1000L),
             )
         }
         val viewModel = viewModelDeTest(store, CuadernoViewModel::class.java) { CuadernoViewModel(db) }

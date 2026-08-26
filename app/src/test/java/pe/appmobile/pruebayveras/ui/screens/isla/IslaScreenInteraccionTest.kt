@@ -66,108 +66,6 @@ class IslaScreenInteraccionTest {
         return IslaDeTest(viewModel, db)
     }
 
-    @Test
-    fun `correr la prueba en la Isla de la Marea guarda un intento real`() {
-        val (viewModel, db) = cargarIsla("isla_marea")
-
-        // Simula lo que hace arrastrar la perilla: cambia la sal de la prueba para que
-        // difiera del control en exactamente una variable. Sin este paso, el montaje de
-        // prueba nace igual al de control (0 diferencias) y "Correr la prueba" avisa,
-        // con razón, que no es una prueba justa — no hay nada que comparar todavía.
-        viewModel.cambiarVariablePrueba("sal", 3)
-        compose.waitForIdle()
-
-        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
-        compose.waitForIdle()
-
-        val intentos = runBlocking { db.intentoDao().observarPorReto("reto_marea_facil").first() }
-        assertTrue("debe haber guardado al menos un intento real", intentos.isNotEmpty())
-    }
-
-    @Test
-    fun `tras correr la prueba se ve el resultado, y Continuar avanza al siguiente reto`() {
-        val (viewModel, _) = cargarIsla("isla_marea")
-        val indiceInicial = viewModel.estado.value.indiceRetoActual
-
-        // Antes, "Correr la prueba" avanzaba en silencio al siguiente reto: no habia
-        // forma de notar que algo habia pasado. Ahora debe quedar un resultado visible
-        // (el panel con "Resultado del control"/"Resultado de la prueba") hasta que el
-        // niño toque "Continuar".
-        viewModel.cambiarVariablePrueba("sal", 3)
-        compose.waitForIdle()
-        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
-        compose.waitForIdle()
-        esperarResultado(viewModel)
-
-        compose.onNodeWithText("Resultado del control", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Resultado de la prueba", substring = true).assertIsDisplayed()
-
-        compose.onNodeWithText("Continuar").performScrollTo().performClick()
-        compose.waitForIdle()
-
-        assertTrue("Continuar debe cerrar el panel de resultado", viewModel.estado.value.ultimoResultado == null)
-        assertEquals(
-            "Continuar debe avanzar al siguiente reto",
-            indiceInicial + 1,
-            viewModel.estado.value.indiceRetoActual,
-        )
-    }
-
-    @Test
-    fun `el reto dificil pide tres corridas reales, con progreso visible, antes de abrir la pregunta de tendencia`() {
-        val (viewModel, _) = cargarIsla("isla_marea")
-
-        // Facil y medio piden una sola corrida cada uno.
-        repeat(2) {
-            viewModel.cambiarVariablePrueba("sal", it + 1)
-            compose.waitForIdle()
-            compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
-            compose.waitForIdle()
-            esperarResultado(viewModel)
-            compose.onNodeWithText("Continuar").performScrollTo().performClick()
-            compose.waitForIdle()
-        }
-        assertEquals("DIFICIL", viewModel.estado.value.retoActual?.dificultad)
-
-        // Primera corrida del reto dificil: debe verse "Corrida 1 de 3". Como todavia
-        // faltan corridas, el boton no dice "Continuar" sino "Probar con otra
-        // cantidad" — si dijera "Continuar" ahi mismo, invitaria a saltarse las otras
-        // dos corridas.
-        viewModel.cambiarVariablePrueba("sal", 10)
-        compose.waitForIdle()
-        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
-        compose.waitForIdle()
-        esperarResultado(viewModel)
-        compose.onNodeWithText("Corrida 1 de 3", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Probar con otra cantidad").performScrollTo().performClick()
-        compose.waitForIdle()
-        assertEquals("DIFICIL", viewModel.estado.value.retoActual?.dificultad)
-        assertTrue("todavia no debe preguntar la tendencia", !viewModel.estado.value.mostrarPreguntaTendencia)
-
-        // Segunda corrida: "Corrida 2 de 3", tampoco avanza todavia.
-        viewModel.cambiarVariablePrueba("sal", 15)
-        compose.waitForIdle()
-        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
-        compose.waitForIdle()
-        esperarResultado(viewModel)
-        compose.onNodeWithText("Corrida 2 de 3", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Probar con otra cantidad").performScrollTo().performClick()
-        compose.waitForIdle()
-        assertTrue("todavia no debe preguntar la tendencia", !viewModel.estado.value.mostrarPreguntaTendencia)
-
-        // Tercera corrida: recien aqui abre la pregunta de tendencia.
-        viewModel.cambiarVariablePrueba("sal", 20)
-        compose.waitForIdle()
-        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
-        compose.waitForIdle()
-        esperarResultado(viewModel)
-        compose.onNodeWithText("Corrida 3 de 3", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Continuar").performScrollTo().performClick()
-        compose.waitForIdle()
-
-        assertTrue("tras la tercera corrida si debe preguntar la tendencia", viewModel.estado.value.mostrarPreguntaTendencia)
-    }
-
     private fun esperarResultado(viewModel: IslaViewModel) {
         var pasadas = 0
         while (viewModel.estado.value.ultimoResultado == null && pasadas < 100) {
@@ -175,16 +73,69 @@ class IslaScreenInteraccionTest {
             compose.waitForIdle()
             pasadas++
         }
-        assertTrue("debe verse un resultado tras correr la prueba", viewModel.estado.value.ultimoResultado != null)
+        assertTrue("debe verse un resultado tras tocar ¡Pruébalo!", viewModel.estado.value.ultimoResultado != null)
     }
 
     @Test
-    fun `el lado Control muestra un booleano en palabras, no el false literal de Kotlin`() {
-        cargarIsla("isla_viento")
+    fun `probar en la Isla de la Marea guarda un intento real`() {
+        val (viewModel, db) = cargarIsla("isla_marea")
 
-        // Antes esto se leia literalmente paracaidas: false — ingles de programacion,
-        // no una palabra que un niño de 8 a 12 años reconozca.
-        compose.onNodeWithText("paracaidas: No").assertIsDisplayed()
+        // sal=8 da alturaFlotacion=5 con MotorFlotabilidad — la meta real del reto facil.
+        viewModel.cambiarVariablePrueba("sal", 8)
+        compose.waitForIdle()
+
+        compose.onNodeWithText("¡Pruébalo!").performScrollTo().performClick()
+        compose.waitForIdle()
+
+        val intentos = runBlocking { db.intentoDao().observarPorReto("reto_marea_facil").first() }
+        assertTrue("debe haber guardado al menos un intento real", intentos.isNotEmpty())
+    }
+
+    @Test
+    fun `tras lograr la meta se ve el resultado, y Continuar avanza al siguiente reto`() {
+        val (viewModel, _) = cargarIsla("isla_marea")
+        val indiceInicial = viewModel.estado.value.indiceRetoActual
+
+        viewModel.cambiarVariablePrueba("sal", 8)
+        compose.waitForIdle()
+        compose.onNodeWithText("¡Pruébalo!").performScrollTo().performClick()
+        compose.waitForIdle()
+        esperarResultado(viewModel)
+
+        assertTrue("la meta se logra con sal=8", viewModel.estado.value.ultimoResultado?.logrado == true)
+        compose.onNodeWithText("¡Lo lograste!", substring = true).assertIsDisplayed()
+
+        compose.onNodeWithText("Continuar").performScrollTo().performClick()
+        compose.waitForIdle()
+
+        assertTrue("Continuar debe cerrar el panel de resultado", viewModel.estado.value.ultimoResultado == null)
+        assertEquals(
+            "Continuar debe avanzar al siguiente reto cuando se logro la meta",
+            indiceInicial + 1,
+            viewModel.estado.value.indiceRetoActual,
+        )
+    }
+
+    @Test
+    fun `si no se logra la meta, Reintentar deja en el mismo reto con el control de nuevo`() {
+        val (viewModel, _) = cargarIsla("isla_marea")
+
+        // sal=0 nunca llega a flotar (alturaFlotacion=0), lejos de la meta del reto facil (5).
+        viewModel.cambiarVariablePrueba("sal", 0)
+        compose.waitForIdle()
+        compose.onNodeWithText("¡Pruébalo!").performScrollTo().performClick()
+        compose.waitForIdle()
+        esperarResultado(viewModel)
+
+        assertTrue("sal=0 no deberia lograr la meta", viewModel.estado.value.ultimoResultado?.logrado == false)
+        compose.onNodeWithText("Todavía no", substring = true).assertIsDisplayed()
+
+        compose.onNodeWithText("Reintentar").performScrollTo().performClick()
+        compose.waitForIdle()
+
+        assertEquals("no debe avanzar de reto si no se logro la meta", 0, viewModel.estado.value.indiceRetoActual)
+        // El control (la perilla de "sal") debe estar visible de nuevo para reintentar.
+        compose.onNodeWithContentDescription("sal:", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -229,6 +180,17 @@ class IslaScreenInteraccionTest {
     @Test
     fun `el mismo arrastre comodo tambien completa un rango ancho (altura, 0-60)`() {
         val (viewModel, _) = cargarIsla("isla_viento")
+
+        // "altura" es la variable del reto dificil de esta isla — se avanza hasta ahi
+        // logrando facil y medio primero (los dos con "paracaidas").
+        repeat(2) {
+            viewModel.cambiarVariablePrueba("paracaidas", true)
+            viewModel.probar()
+            esperarResultado(viewModel)
+            viewModel.continuarTrasResultado()
+        }
+        assertEquals("altura", viewModel.estado.value.retoActual?.variableIndependiente)
+
         compose.onNodeWithContentDescription("altura:", substring = true).performTouchInput {
             swipeUp(startY = bottom, endY = bottom - distanciaComodaDeArrastre, durationMillis = 300)
         }

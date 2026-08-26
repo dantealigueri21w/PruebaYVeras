@@ -7,7 +7,6 @@ import androidx.room.PrimaryKey
 data class PaginaCuadernoEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val idReto: String,
-    val tendenciaElegida: String,
-    val tendenciaCorrecta: Boolean,
+    val resultadoReal: Float,
     val timestamp: Long,
 )

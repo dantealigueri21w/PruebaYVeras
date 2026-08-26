@@ -26,8 +26,6 @@ import pe.appmobile.pruebayveras.R
 import pe.appmobile.pruebayveras.data.entity.PaginaCuadernoEntity
 import pe.appmobile.pruebayveras.data.seed.SemillaIslas
 import pe.appmobile.pruebayveras.data.seed.SemillaRetos
-import pe.appmobile.pruebayveras.domain.engine.Tendencia
-import pe.appmobile.pruebayveras.ui.components.GraficoDatosReales
 import pe.appmobile.pruebayveras.ui.shapes.EtiquetaFrascoShape
 
 /** `HorizontalPager` en vez de una lista con scroll (sección 3.1): el Cuaderno se hojea. */
@@ -43,7 +41,7 @@ fun CuadernoScreen(viewModel: CuadernoViewModel, onVolver: () -> Unit = {}) {
         } else {
             val estadoPager = rememberPagerState(pageCount = { paginas.size })
             HorizontalPager(state = estadoPager, modifier = Modifier.fillMaxSize()) { indice ->
-                PaginaDeCuaderno(pagina = paginas[indice], viewModel = viewModel)
+                PaginaDeCuaderno(pagina = paginas[indice])
             }
         }
 
@@ -54,19 +52,10 @@ fun CuadernoScreen(viewModel: CuadernoViewModel, onVolver: () -> Unit = {}) {
 }
 
 @Composable
-private fun PaginaDeCuaderno(pagina: PaginaCuadernoEntity, viewModel: CuadernoViewModel) {
+private fun PaginaDeCuaderno(pagina: PaginaCuadernoEntity) {
     val reto = remember(pagina.idReto) { SemillaRetos.retos.firstOrNull { it.idReto == pagina.idReto } }
     val nombreIsla = remember(reto) {
         SemillaIslas.islas.firstOrNull { it.idIsla == reto?.idIsla }?.nombre ?: pagina.idReto
-    }
-    val intentos by viewModel.intentosDe(pagina.idReto).collectAsState(initial = emptyList())
-    val datosReales = intentos.filter { it.fueJusta }.map { it.resultadoPrueba }
-
-    val etiquetaTendencia = when (runCatching { Tendencia.valueOf(pagina.tendenciaElegida) }.getOrNull()) {
-        Tendencia.SUBE -> stringResource(R.string.isla_tendencia_sube)
-        Tendencia.BAJA -> stringResource(R.string.isla_tendencia_baja)
-        Tendencia.NO_CAMBIA -> stringResource(R.string.isla_tendencia_no_cambia)
-        null -> pagina.tendenciaElegida
     }
     val etiquetaDificultad = when (reto?.dificultad) {
         "FACIL" -> stringResource(R.string.cuaderno_dificultad_facil)
@@ -94,26 +83,10 @@ private fun PaginaDeCuaderno(pagina: PaginaCuadernoEntity, viewModel: CuadernoVi
                     color = MaterialTheme.colorScheme.onSurface,
                 )
             }
-
-            GraficoDatosReales(
-                datos = datosReales,
-                descripcion = stringResource(R.string.cd_grafico_cuaderno),
-                modifier = Modifier.padding(vertical = 12.dp),
-            )
-
             Text(
-                text = "${stringResource(R.string.cuaderno_tu_conclusion)} $etiquetaTendencia",
+                text = stringResource(R.string.cuaderno_pagina_logrado),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = if (pagina.tendenciaCorrecta) {
-                    stringResource(R.string.cuaderno_conclusion_correcta)
-                } else {
-                    stringResource(R.string.cuaderno_conclusion_revisar)
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

@@ -362,3 +362,63 @@ fácil/medio prueban "paracaídas" y difícil prueba "altura", el ejemplo real
 que motivó este arreglo) confirmando que la tendencia final sale correcta
 usando solo los datos de altura, sin importar qué haya pasado en los otros
 dos retos.
+
+## 26/08/2026 — Reemplazada la mecánica de "prueba justa" por una de logro real
+
+Tras jugar todas las correcciones anteriores, Rodrigo reportó que el juego en sí
+—no ya un bug puntual— no tenía sentido ni se sentía jugable: la mesa de control y
+prueba, la perilla, y la validación de "prueba justa" se sentían abstractas para el
+público de 8 a 12 años. Se investigó `investigacion/30-CIENCIALAB.md` y se confirmó
+que el precedente citado como validación (PhET Interactive Simulations) no usa ese
+formalismo — deja manipular una variable y ver el efecto real al instante. Se
+acordó con Rodrigo un rediseño completo de la mecánica, documentado en
+`docs/superpowers/specs/2026-08-26-mecanica-logro-tocar-y-ver.md` (no se sube al
+repo, ver sección 11.2 del prompt maestro) y simplificado después a pedido suyo
+para poder entregarlo de inmediato.
+
+**Mecánica nueva:** cada reto se centra en una sola variable (su
+`variableIndependiente` ya declarada). Se ajusta con el mismo control de siempre
+(la perilla arreglada hoy, o el selector/interruptor binario, sin cambios ahí) y se
+toca "¡Pruébalo!" — sin mesa de control, sin comparar dos montajes, sin validar si
+es "justo". El motor de esa isla calcula el resultado real (ninguna fórmula
+cambió) y se compara contra una **meta real** (`RetoEntity.valorObjetivo` ±
+`margenObjetivo`, más ancho en fácil, más angosto en difícil) verificada a mano
+contra el código de cada uno de los 10 motores — no puesta a ojo. Si el resultado
+cae dentro de la meta: panel de "¡Lo lograste!" con un medidor visual de cercanía,
+se guarda una página real en el Cuaderno, y se avanza al siguiente reto (o se
+confirma la pieza de Chirimbolo si era el último de la isla). Si no: "Todavía no",
+botón "Reintentar", mismo reto, sin castigo.
+
+**Verificando las 27 metas contra las fórmulas reales se encontró un caso real:**
+en Isla de la Cueva, `MotorEco.intensidad` se aplana en 0 a partir de los 12,5 m
+(`100 - distancia*8`), pero el control de "distancia" tenía el rango genérico de
+0 a 60 — el 80 % del arrastre no cambiaba nada. Se le dio a esa variable un rango
+propio (0 a 15) en vez del genérico; las demás variables continuas (altura)
+escalan suave en todo su rango y no lo necesitaron.
+
+**Se retiró, por quedar sin uso real:** `MesaDoblePrueba`, `MotorPruebaJusta` (y su
+test, 8 casos), `MotorCuadernoDatos` y `GraficoDatosReales` (el gráfico de
+tendencia de la sesión anterior), y los campos de `IslaViewModel` que armaban las
+tres corridas del reto difícil (`corridasRetoActual`, `mostrarPreguntaTendencia`,
+`elegirTendencia`, etc.). `IntentoEntity` y `PaginaCuadernoEntity` se simplificaron
+para dejar de hablar de "control" y "tendencia" (ahora: valor probado, resultado
+real, si se logró). Sube la versión de Room a 2 con
+`fallbackToDestructiveMigration` — no hay datos reales de usuario que conservar
+todavía, solo semillas.
+
+**Consecuencia ya anotada en el spec, y que sigue en pie:** esto aleja la app de
+"diseño experimental / prueba justa" (el título pensado para el registro ante
+INDECOPI) y la acerca a "explorar un fenómeno real y lograr un objetivo con él" —
+sigue siendo ciencia real y verificada, pero la ficha y el título del expediente
+deben actualizarse para reflejarlo antes de armar el expediente.
+
+**No implementado en este cierre, a propósito, por pedido explícito de avanzar
+rápido:** las escenas animadas propias por isla (el huevo subiendo en el agua, el
+paracaídas cayendo) que describía el spec original. El fondo de cada isla sigue
+siendo la imagen estática ya generada; el medidor de cercanía en el panel de
+resultado es genérico (sirve igual para las nueve islas sin casos especiales) en
+vez de una animación bespoke. Es la diferencia entre la versión "rápida y jugable
+ya" y la versión "visualmente completa" — ambas descritas en el spec.
+
+Verificado: 117 tests (incluye los reescritos para la mecánica nueva) en verde,
+`lintDebug` y `assembleDebug` limpios, sobre las nueve islas.

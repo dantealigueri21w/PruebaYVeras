@@ -12,35 +12,25 @@ import pe.appmobile.pruebayveras.data.repository.CienciaLabRepository
 import pe.appmobile.pruebayveras.data.seed.SemillaPiezas
 import pe.appmobile.pruebayveras.domain.adapter.AdaptadorIsla
 import pe.appmobile.pruebayveras.domain.adapter.adaptadorDe
-import pe.appmobile.pruebayveras.domain.engine.MotorCuadernoDatos
-import pe.appmobile.pruebayveras.domain.engine.Tendencia
 import pe.appmobile.pruebayveras.domain.model.Montaje
 import pe.appmobile.pruebayveras.domain.model.Variable
-
-/** El reto difícil corre tres montajes (varias magnitudes de la misma variable) para
- * armar una tendencia real — no una comparación de dos, como fácil y medio. */
-private const val CORRIDAS_REQUERIDAS_DIFICIL = 3
+import kotlin.math.abs
 
 data class EstadoIsla(
     val idIsla: String = "",
     val retos: List<RetoEntity> = emptyList(),
     val indiceRetoActual: Int = 0,
     val prueba: Montaje = Montaje(emptyList()),
-    val ultimoAvisoInjusto: Boolean = false,
-    val ultimoAvisoMagnitudRepetida: Boolean = false,
-    val mostrarPreguntaTendencia: Boolean = false,
+    val ultimoResultado: ResultadoLogro? = null,
     val piezaConfirmada: Boolean = false,
-    val ultimoResultado: ResultadoReto? = null,
-    val corridasRetoActual: Int = 0,
 ) {
     val retoActual: RetoEntity? get() = retos.getOrNull(indiceRetoActual)
-    val corridasNecesarias: Int get() = if (retoActual?.dificultad == "DIFICIL") CORRIDAS_REQUERIDAS_DIFICIL else 1
 }
 
-/** Lo que arrojó el último "Correr la prueba", para mostrarlo antes de pasar al
- * siguiente reto — sin esto la pantalla avanzaba en silencio y no parecía haber
- * pasado nada. */
-data class ResultadoReto(val resultadoControl: Float, val resultadoPrueba: Float)
+/** Lo que arrojó el último "¡Pruébalo!": el valor real que devolvió el motor de esta
+ * isla y si cayó dentro de la zona objetivo del reto — sin esto, tocar el botón
+ * avanzaba en silencio y no se sentía un logro. */
+data class ResultadoLogro(val resultadoReal: Float, val logrado: Boolean)
 
 class IslaViewModel(private val db: AppDatabase, private val idIsla: String) : ViewModel() {
 
@@ -68,88 +58,59 @@ class IslaViewModel(private val db: AppDatabase, private val idIsla: String) : V
         val nuevasVariables = _estado.value.prueba.variables.map {
             if (it.nombre == nombre) Variable(nombre, valor) else it
         }
-        _estado.value = _estado.value.copy(prueba = Montaje(nuevasVariables), ultimoAvisoInjusto = false)
+        _estado.value = _estado.value.copy(prueba = Montaje(nuevasVariables))
     }
 
-    fun avisarPruebaInjusta() {
-        _estado.value = _estado.value.copy(ultimoAvisoInjusto = true)
-    }
-
-    fun ejecutarPrueba() {
+    /** Calcula el resultado real con el motor de esta isla y lo compara contra la
+     * zona objetivo del reto activo — sin mesa de control, sin validar si es "justo":
+     * se toca, se prueba, se ve si se logró. */
+    fun probar() {
         val actual = _estado.value
-        val reto = actual.retos.getOrNull(actual.indiceRetoActual) ?: return
-        val control = Montaje(adaptador.variablesBase)
-        val resultadoControl = adaptador.calcular(control)
-        val resultadoPrueba = adaptador.calcular(actual.prueba)
-        val magnitudPrueba = (actual.prueba.valorDe(reto.variableIndependiente) as? Number)?.toFloat()
+        val reto = actual.retoActual ?: return
+        val resultadoReal = adaptador.calcular(actual.prueba)
+        val logrado = abs(resultadoReal - reto.valorObjetivo) <= reto.margenObjetivo
 
         viewModelScope.launch {
-            // En el reto difícil, cada una de las tres corridas tiene que probar una
-            // magnitud distinta de la misma variable — repetir la misma cantidad tres
-            // veces no arma una tendencia real, solo repite el mismo punto.
-            if (reto.dificultad == "DIFICIL" && magnitudPrueba != null) {
-                val yaProbadas = repository.magnitudesProbadas(reto.idReto)
-                if (yaProbadas.any { it == magnitudPrueba }) {
-                    _estado.value = actual.copy(ultimoAvisoMagnitudRepetida = true)
-                    return@launch
-                }
-            }
-
             repository.registrarIntento(
                 idReto = reto.idReto,
                 variableCambiada = reto.variableIndependiente,
-                valorControl = control.valorDe(reto.variableIndependiente).toString(),
-                valorPrueba = actual.prueba.valorDe(reto.variableIndependiente).toString(),
-                resultadoControl = resultadoControl,
-                resultadoPrueba = resultadoPrueba,
-                fueJusta = true,
+                valorProbado = actual.prueba.valorDe(reto.variableIndependiente).toString(),
+                resultadoReal = resultadoReal,
+                logrado = logrado,
             )
-
-            _estado.value = actual.copy(
-                ultimoResultado = ResultadoReto(resultadoControl, resultadoPrueba),
-                corridasRetoActual = actual.corridasRetoActual + 1,
-                ultimoAvisoMagnitudRepetida = false,
-            )
+            _estado.value = actual.copy(ultimoResultado = ResultadoLogro(resultadoReal, logrado))
         }
     }
 
-    /** Cierra el resultado que se acaba de ver. Si el reto actual todavía no llegó a
-     * [EstadoIsla.corridasNecesarias] (el reto difícil pide tres, el resto una), se
-     * queda en el mismo reto para la siguiente corrida; si ya las completó, recién ahí
-     * avanza al siguiente reto (o abre la pregunta de tendencia si era el último) —
-     * nunca automáticamente, para que el resultado no desaparezca antes de leerlo. */
+    /** Cierra el resultado que se acaba de ver. Si se logró la meta, guarda la página
+     * real en el Cuaderno y avanza al siguiente reto (o confirma la pieza de
+     * Chirimbolo si era el último); si no se logró, se queda en el mismo reto para
+     * reintentarlo — nunca automático, para que el resultado no desaparezca antes de
+     * leerlo. */
     fun continuarTrasResultado() {
         val actual = _estado.value
-        if (actual.corridasRetoActual < actual.corridasNecesarias) {
+        val resultado = actual.ultimoResultado
+
+        if (resultado == null || !resultado.logrado) {
             _estado.value = actual.copy(prueba = Montaje(adaptador.variablesBase), ultimoResultado = null)
             return
         }
 
+        val reto = actual.retoActual ?: return
         val esUltimoReto = actual.indiceRetoActual == actual.retos.lastIndex
+
         _estado.value = actual.copy(
             indiceRetoActual = if (esUltimoReto) actual.indiceRetoActual else actual.indiceRetoActual + 1,
-            mostrarPreguntaTendencia = esUltimoReto,
             prueba = Montaje(adaptador.variablesBase),
             ultimoResultado = null,
-            corridasRetoActual = 0,
+            piezaConfirmada = esUltimoReto || actual.piezaConfirmada,
         )
-    }
 
-    fun elegirTendencia(tendencia: Tendencia) {
-        val actual = _estado.value
-        val reto = actual.retos.getOrNull(actual.indiceRetoActual) ?: return
         viewModelScope.launch {
-            // Los datos reales del propio reto difícil (ordenados por la magnitud que
-            // se probó, no por el orden en que se jugó) — no los de fácil/medio, que en
-            // varias islas prueban una variable distinta y mezclarlos con esos daría
-            // una tendencia sin sentido.
-            val datos = repository.datosOrdenadosPorMagnitud(reto.idReto)
-            val correcta = MotorCuadernoDatos.conclusionEsCorrecta(datos, tendencia)
-            repository.registrarPaginaCuaderno(reto.idReto, tendencia, correcta)
-            if (correcta) {
+            repository.registrarPaginaLogro(reto.idReto, resultado.resultadoReal)
+            if (esUltimoReto) {
                 val idPieza = SemillaPiezas.piezas.first { it.idIsla == idIsla }.idPieza
                 repository.confirmarPieza(idPieza)
-                _estado.value = _estado.value.copy(piezaConfirmada = true)
             }
         }
     }

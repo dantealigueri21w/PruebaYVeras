@@ -8,18 +8,19 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import pe.appmobile.pruebayveras.data.AppDatabase
-import pe.appmobile.pruebayveras.domain.engine.Tendencia
 import pe.appmobile.pruebayveras.ui.testutil.viewModelDeTest
 
-/** Cubre el bug real encontrado el 26/08/2026: `elegirTendencia` nunca guardaba una
- * página en el Cuaderno de Campo — la pantalla de Cuaderno quedaba vacía para siempre
- * en la app real, aunque el niño sí respondiera la pregunta de tendencia. */
+/** Cubre la mecánica nueva (26/08/2026): tocar "¡Pruébalo!" calcula el resultado real
+ * con el motor de la isla y lo compara contra la meta del reto — sin control, sin
+ * prueba justa, sin corridas ni pregunta de tendencia. */
 @RunWith(RobolectricTestRunner::class)
 class IslaViewModelTest {
 
@@ -30,178 +31,93 @@ class IslaViewModelTest {
         store.clear()
     }
 
-    @Test
-    fun `elegir una tendencia guarda de verdad una pagina en el cuaderno`() = runBlocking {
-        val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .allowMainThreadQueries().build()
-        val viewModel = viewModelDeTest(store, IslaViewModel::class.java) { IslaViewModel(db, "isla_marea") }
-
+    private suspend fun esperarRetos(viewModel: IslaViewModel) {
         var pasadas = 0
         while (viewModel.estado.value.retos.isEmpty() && pasadas < 100) {
             shadowOf(Looper.getMainLooper()).idle()
             kotlinx.coroutines.delay(50)
             pasadas++
         }
+    }
 
-        val retos = viewModel.estado.value.retos
-        for ((indice, _) in retos.withIndex()) {
-            // El reto dificil pide tres corridas reales (una tendencia de verdad, no
-            // una comparacion de dos) antes de avanzar; facil y medio piden solo una.
-            // Cada corrida necesita una magnitud de sal distinta a las anteriores del
-            // MISMO reto, o el sistema la rechaza (ejecutarPrueba() no avanza).
-            val corridasNecesarias = viewModel.estado.value.corridasNecesarias
-            for (corrida in 1..corridasNecesarias) {
-                viewModel.cambiarVariablePrueba("sal", corrida)
-                viewModel.ejecutarPrueba()
+    private suspend fun esperarResultado(viewModel: IslaViewModel) {
+        var pasadas = 0
+        while (viewModel.estado.value.ultimoResultado == null && pasadas < 100) {
+            shadowOf(Looper.getMainLooper()).idle()
+            kotlinx.coroutines.delay(50)
+            pasadas++
+        }
+    }
 
-                // ejecutarPrueba() ya no avanza de reto por si sola: primero deja el
-                // resultado visible (ultimoResultado) para que el niño lo vea, y solo
-                // se avanza al llamar continuarTrasResultado() — el equivalente a
-                // tocar "Continuar" en el panel de resultado.
-                var pasadasResultado = 0
-                while (viewModel.estado.value.ultimoResultado == null && pasadasResultado < 100) {
-                    shadowOf(Looper.getMainLooper()).idle()
-                    kotlinx.coroutines.delay(50)
-                    pasadasResultado++
-                }
-                assertTrue(
-                    "debe calcularse un resultado en el reto $indice, corrida $corrida",
-                    viewModel.estado.value.ultimoResultado != null,
-                )
+    @Test
+    fun `lograr la meta de los tres retos de una isla confirma la pieza de Chirimbolo`() = runBlocking {
+        val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
+            .allowMainThreadQueries().build()
+        val viewModel = viewModelDeTest(store, IslaViewModel::class.java) { IslaViewModel(db, "isla_marea") }
+        esperarRetos(viewModel)
 
-                viewModel.continuarTrasResultado()
-            }
+        // sal=8,12,18 dan alturaFlotacion=5,9,15 con MotorFlotabilidad (altura = sal-3)
+        // — exactamente los tres objetivos reales de fácil/medio/difícil.
+        for (sal in listOf(8, 12, 18)) {
+            viewModel.cambiarVariablePrueba("sal", sal)
+            viewModel.probar()
+            esperarResultado(viewModel)
+            assertTrue("sal=$sal debería lograr la meta de su reto", viewModel.estado.value.ultimoResultado?.logrado == true)
+            viewModel.continuarTrasResultado()
         }
 
-        assertTrue("debe mostrar la pregunta de tendencia tras el ultimo reto", viewModel.estado.value.mostrarPreguntaTendencia)
+        assertTrue("debe confirmarse la pieza tras completar los tres retos", viewModel.estado.value.piezaConfirmada)
 
-        viewModel.elegirTendencia(Tendencia.SUBE)
-
-        var pasadasPagina = 0
+        var pasadasPaginas = 0
         var paginas = db.paginaCuadernoDao().observarTodas().first()
-        while (paginas.isEmpty() && pasadasPagina < 100) {
+        while (paginas.size < 3 && pasadasPaginas < 100) {
             shadowOf(Looper.getMainLooper()).idle()
             kotlinx.coroutines.delay(50)
             paginas = db.paginaCuadernoDao().observarTodas().first()
-            pasadasPagina++
+            pasadasPaginas++
         }
-
-        assertEquals(1, paginas.size)
-        assertEquals(retos.last().idReto, paginas.first().idReto)
-        assertEquals("SUBE", paginas.first().tendenciaElegida)
+        assertEquals("cada reto logrado debe dejar su propia pagina real", 3, paginas.size)
     }
 
     @Test
-    fun `repetir la misma magnitud en el reto dificil no cuenta como una corrida nueva`() = runBlocking {
+    fun `no lograr la meta no avanza de reto y deja reintentar`() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .allowMainThreadQueries().build()
         val viewModel = viewModelDeTest(store, IslaViewModel::class.java) { IslaViewModel(db, "isla_marea") }
+        esperarRetos(viewModel)
 
-        var pasadas = 0
-        while (viewModel.estado.value.retos.isEmpty() && pasadas < 100) {
-            shadowOf(Looper.getMainLooper()).idle()
-            kotlinx.coroutines.delay(50)
-            pasadas++
-        }
+        // sal=0 -> alturaFlotacion=0, lejos del objetivo del reto facil (5, margen 1.75).
+        viewModel.cambiarVariablePrueba("sal", 0)
+        viewModel.probar()
+        esperarResultado(viewModel)
+        assertFalse(viewModel.estado.value.ultimoResultado?.logrado ?: true)
 
-        // Avanza hasta el reto dificil (facil y medio piden una sola corrida).
-        repeat(2) { indice ->
-            viewModel.cambiarVariablePrueba("sal", indice + 1)
-            viewModel.ejecutarPrueba()
-            var pasadasResultado = 0
-            while (viewModel.estado.value.ultimoResultado == null && pasadasResultado < 100) {
-                shadowOf(Looper.getMainLooper()).idle()
-                kotlinx.coroutines.delay(50)
-                pasadasResultado++
-            }
-            viewModel.continuarTrasResultado()
-        }
-        assertEquals("DIFICIL", viewModel.estado.value.retoActual?.dificultad)
-
-        viewModel.cambiarVariablePrueba("sal", 4)
-        viewModel.ejecutarPrueba()
-        var pasadasPrimera = 0
-        while (viewModel.estado.value.ultimoResultado == null && pasadasPrimera < 100) {
-            shadowOf(Looper.getMainLooper()).idle()
-            kotlinx.coroutines.delay(50)
-            pasadasPrimera++
-        }
-        assertEquals(1, viewModel.estado.value.corridasRetoActual)
         viewModel.continuarTrasResultado()
+        assertEquals("no debe avanzar de reto si no se logro la meta", 0, viewModel.estado.value.indiceRetoActual)
+        assertNull("el panel de resultado debe cerrarse para poder reintentar", viewModel.estado.value.ultimoResultado)
 
-        // Repite la MISMA cantidad de sal (4) que ya se probo en este reto.
-        viewModel.cambiarVariablePrueba("sal", 4)
-        viewModel.ejecutarPrueba()
-        var pasadasAviso = 0
-        while (!viewModel.estado.value.ultimoAvisoMagnitudRepetida && pasadasAviso < 100) {
-            shadowOf(Looper.getMainLooper()).idle()
-            kotlinx.coroutines.delay(50)
-            pasadasAviso++
-        }
-
-        assertTrue("debe avisar que esa magnitud ya se probo", viewModel.estado.value.ultimoAvisoMagnitudRepetida)
-        assertEquals("no debe contar como una corrida nueva", 1, viewModel.estado.value.corridasRetoActual)
-        assertTrue("no debe abrir un panel de resultado nuevo", viewModel.estado.value.ultimoResultado == null)
+        // Reintenta con la cantidad que si logra la meta.
+        viewModel.cambiarVariablePrueba("sal", 8)
+        viewModel.probar()
+        esperarResultado(viewModel)
+        assertTrue(viewModel.estado.value.ultimoResultado?.logrado == true)
     }
 
     @Test
-    fun `en una isla con variables distintas por reto, la tendencia final solo usa los datos reales del reto dificil`() = runBlocking {
+    fun `en un reto con dos variables, solo la variableIndependiente del reto se prueba`() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .allowMainThreadQueries().build()
         val viewModel = viewModelDeTest(store, IslaViewModel::class.java) { IslaViewModel(db, "isla_viento") }
+        esperarRetos(viewModel)
 
-        var pasadas = 0
-        while (viewModel.estado.value.retos.isEmpty() && pasadas < 100) {
-            shadowOf(Looper.getMainLooper()).idle()
-            kotlinx.coroutines.delay(50)
-            pasadas++
-        }
+        // reto_viento_facil: variableIndependiente="paracaidas"; "altura" queda fija
+        // en su valor base (20f) sin que el niño la toque en este reto.
+        assertEquals("paracaidas", viewModel.estado.value.retoActual?.variableIndependiente)
 
-        // Facil y medio de la Isla del Viento prueban "paracaidas" (un booleano), no
-        // "altura" — antes del arreglo esos resultados se mezclaban con los del reto
-        // dificil para "armar" una tendencia que en realidad comparaba variables
-        // distintas. Se juegan igual que jugaria un niño real, para probar que ya no
-        // contaminan la conclusion final.
-        val retos = viewModel.estado.value.retos
-        for (reto in retos) {
-            val corridasNecesarias = viewModel.estado.value.corridasNecesarias
-            for (corrida in 1..corridasNecesarias) {
-                when (reto.variableIndependiente) {
-                    "paracaidas" -> viewModel.cambiarVariablePrueba("paracaidas", true)
-                    "altura" -> viewModel.cambiarVariablePrueba("altura", 15f * corrida) // 15, 30, 45 m: creciente
-                }
-                viewModel.ejecutarPrueba()
+        viewModel.cambiarVariablePrueba("paracaidas", true)
+        viewModel.probar()
+        esperarResultado(viewModel)
 
-                var pasadasResultado = 0
-                while (viewModel.estado.value.ultimoResultado == null && pasadasResultado < 100) {
-                    shadowOf(Looper.getMainLooper()).idle()
-                    kotlinx.coroutines.delay(50)
-                    pasadasResultado++
-                }
-                viewModel.continuarTrasResultado()
-            }
-        }
-
-        assertTrue("debe mostrar la pregunta de tendencia tras el ultimo reto", viewModel.estado.value.mostrarPreguntaTendencia)
-
-        // La altura real probada en el reto dificil fue creciente (15, 30, 45 m) y sin
-        // paracaidas en los tres casos: caer desde mas alto tarda mas, la tendencia
-        // real es SUBE — sin importar que facil y medio hayan probado otra cosa.
-        viewModel.elegirTendencia(Tendencia.SUBE)
-
-        var pasadasPagina = 0
-        var paginas = db.paginaCuadernoDao().observarTodas().first()
-        while (paginas.isEmpty() && pasadasPagina < 100) {
-            shadowOf(Looper.getMainLooper()).idle()
-            kotlinx.coroutines.delay(50)
-            paginas = db.paginaCuadernoDao().observarTodas().first()
-            pasadasPagina++
-        }
-
-        assertEquals(1, paginas.size)
-        assertTrue(
-            "la tendencia debe salir correcta usando solo los datos reales de altura del reto dificil",
-            paginas.first().tendenciaCorrecta,
-        )
+        assertTrue("con paracaidas puesto debe lograr la meta de este reto", viewModel.estado.value.ultimoResultado?.logrado == true)
     }
 }

@@ -1,0 +1,335 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "f22fe127d0ac84b2e29657ef04d17009",
+    "entities": [
+      {
+        "tableName": "perfil",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `alias` TEXT NOT NULL, `avatarId` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alias",
+            "columnName": "alias",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "avatarId",
+            "columnName": "avatarId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "isla",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idIsla` TEXT NOT NULL, `nombre` TEXT NOT NULL, `fenomeno` TEXT NOT NULL, `requisitoDesbloqueo` TEXT, `completada` INTEGER NOT NULL, PRIMARY KEY(`idIsla`))",
+        "fields": [
+          {
+            "fieldPath": "idIsla",
+            "columnName": "idIsla",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fenomeno",
+            "columnName": "fenomeno",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "requisitoDesbloqueo",
+            "columnName": "requisitoDesbloqueo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "completada",
+            "columnName": "completada",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "idIsla"
+          ]
+        }
+      },
+      {
+        "tableName": "reto",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idReto` TEXT NOT NULL, `idIsla` TEXT NOT NULL, `dificultad` TEXT NOT NULL, `textoCorazonada` TEXT NOT NULL, `variableIndependiente` TEXT NOT NULL, `valorObjetivo` REAL NOT NULL, `margenObjetivo` REAL NOT NULL, `completado` INTEGER NOT NULL, PRIMARY KEY(`idReto`))",
+        "fields": [
+          {
+            "fieldPath": "idReto",
+            "columnName": "idReto",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idIsla",
+            "columnName": "idIsla",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dificultad",
+            "columnName": "dificultad",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "textoCorazonada",
+            "columnName": "textoCorazonada",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "variableIndependiente",
+            "columnName": "variableIndependiente",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "valorObjetivo",
+            "columnName": "valorObjetivo",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "margenObjetivo",
+            "columnName": "margenObjetivo",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completado",
+            "columnName": "completado",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "idReto"
+          ]
+        }
+      },
+      {
+        "tableName": "intento",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idReto` TEXT NOT NULL, `variableCambiada` TEXT NOT NULL, `valorProbado` TEXT NOT NULL, `resultadoReal` REAL NOT NULL, `logrado` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idReto",
+            "columnName": "idReto",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "variableCambiada",
+            "columnName": "variableCambiada",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "valorProbado",
+            "columnName": "valorProbado",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "resultadoReal",
+            "columnName": "resultadoReal",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "logrado",
+            "columnName": "logrado",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "pieza_chirimbolo",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idPieza` TEXT NOT NULL, `idIsla` TEXT NOT NULL, `nombre` TEXT NOT NULL, `confirmada` INTEGER NOT NULL, PRIMARY KEY(`idPieza`))",
+        "fields": [
+          {
+            "fieldPath": "idPieza",
+            "columnName": "idPieza",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idIsla",
+            "columnName": "idIsla",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "confirmada",
+            "columnName": "confirmada",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "idPieza"
+          ]
+        }
+      },
+      {
+        "tableName": "pagina_cuaderno",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idReto` TEXT NOT NULL, `resultadoReal` REAL NOT NULL, `timestamp` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idReto",
+            "columnName": "idReto",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "resultadoReal",
+            "columnName": "resultadoReal",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "insignia",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idInsignia` TEXT NOT NULL, `nombre` TEXT NOT NULL, `obtenida` INTEGER NOT NULL, `timestampObtenida` INTEGER, PRIMARY KEY(`idInsignia`))",
+        "fields": [
+          {
+            "fieldPath": "idInsignia",
+            "columnName": "idInsignia",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "obtenida",
+            "columnName": "obtenida",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestampObtenida",
+            "columnName": "timestampObtenida",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "idInsignia"
+          ]
+        }
+      },
+      {
+        "tableName": "racha",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `diasSeguidos` INTEGER NOT NULL, `ultimoDiaJugado` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "diasSeguidos",
+            "columnName": "diasSeguidos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ultimoDiaJugado",
+            "columnName": "ultimoDiaJugado",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f22fe127d0ac84b2e29657ef04d17009')"
+    ]
+  }
+}

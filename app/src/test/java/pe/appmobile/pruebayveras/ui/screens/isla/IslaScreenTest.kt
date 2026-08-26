@@ -60,7 +60,7 @@ class IslaScreenTest {
             pasadas++
         }
         assertTrue("los retos de $idIsla deben haberse cargado", viewModel.estado.value.retos.isNotEmpty())
-        compose.onNodeWithText("Correr la prueba").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("¡Pruébalo!").performScrollTo().assertIsDisplayed()
     }
 
     @Test

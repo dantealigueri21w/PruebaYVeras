@@ -27,14 +27,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import pe.appmobile.pruebayveras.R
-import pe.appmobile.pruebayveras.domain.adapter.adaptadorDe
-import pe.appmobile.pruebayveras.domain.engine.Tendencia
-import pe.appmobile.pruebayveras.domain.model.Montaje
 import pe.appmobile.pruebayveras.domain.model.TipoObstaculo
 import pe.appmobile.pruebayveras.domain.model.TipoSuperficie
 import pe.appmobile.pruebayveras.ui.components.GloboDialogoChirimbolo
 import pe.appmobile.pruebayveras.ui.components.InterruptorDiegetico
-import pe.appmobile.pruebayveras.ui.components.MesaDoblePrueba
 import pe.appmobile.pruebayveras.ui.components.OpcionBinaria
 import pe.appmobile.pruebayveras.ui.components.PanelLegible
 import pe.appmobile.pruebayveras.ui.components.PanelResultado
@@ -48,7 +44,7 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
     val estado by viewModel.estado.collectAsState()
     if (estado.retos.isEmpty()) return
 
-    val reto = estado.retos.getOrNull(estado.indiceRetoActual)
+    val reto = estado.retoActual
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -73,7 +69,18 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            if (reto != null) {
+            if (estado.piezaConfirmada) {
+                PanelLegible {
+                    Text(
+                        stringResource(R.string.isla_completada_titulo),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Button(onClick = onVolver, modifier = Modifier.padding(top = 12.dp)) {
+                        Text(stringResource(R.string.isla_completada_volver))
+                    }
+                }
+            } else if (reto != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
                         painter = painterResource(chirimboloPose("explica")),
@@ -86,93 +93,51 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
                 val resultado = estado.ultimoResultado
                 if (resultado != null) {
                     PanelResultado(
-                        resultadoControl = resultado.resultadoControl,
-                        resultadoPrueba = resultado.resultadoPrueba,
+                        resultadoReal = resultado.resultadoReal,
+                        valorObjetivo = reto.valorObjetivo,
+                        margenObjetivo = reto.margenObjetivo,
+                        logrado = resultado.logrado,
                         onContinuar = viewModel::continuarTrasResultado,
-                        corridaActual = estado.corridasRetoActual,
-                        corridasNecesarias = estado.corridasNecesarias,
                     )
                 } else {
-                    MesaDoblePrueba(
-                        control = Montaje(adaptadorDe(estado.idIsla).variablesBase),
-                        prueba = estado.prueba,
-                        onEjecutar = viewModel::ejecutarPrueba,
-                        onPruebaInjusta = viewModel::avisarPruebaInjusta,
-                        contenidoVariable = { nombre, montaje, esControl ->
-                            val valor = montaje.valorDe(nombre)
-                            if (!esControl) {
-                                when (valor) {
-                                    is Int -> PerillaGiratoria(
-                                        valor = valor, rango = 0..20, etiqueta = nombre,
-                                        onValorCambia = { viewModel.cambiarVariablePrueba(nombre, it) },
-                                    )
-                                    is Float -> PerillaGiratoria(
-                                        valor = valor.toInt(), rango = 0..60, etiqueta = nombre,
-                                        onValorCambia = { viewModel.cambiarVariablePrueba(nombre, it.toFloat()) },
-                                    )
-                                    is Boolean -> InterruptorDiegetico(
-                                        activado = valor,
-                                        onCambia = { viewModel.cambiarVariablePrueba(nombre, it) },
-                                        iconoActivado = R.drawable.chirimbolo_celebra,
-                                        iconoDesactivado = R.drawable.chirimbolo_confundido,
-                                        descripcionActivado = "$nombre activado",
-                                        descripcionDesactivado = "$nombre desactivado",
-                                    )
-                                    is TipoSuperficie -> SelectorBinario(
-                                        seleccionado = valor,
-                                        opciones = OpcionBinaria(TipoSuperficie.LISA, R.drawable.objeto_carrito, stringResource(R.string.isla_superficie_lisa)) to
-                                            OpcionBinaria(TipoSuperficie.RUGOSA, R.drawable.objeto_carrito, stringResource(R.string.isla_superficie_rugosa)),
-                                        onSeleccion = { viewModel.cambiarVariablePrueba(nombre, it) },
-                                    )
-                                    is TipoObstaculo -> SelectorBinario(
-                                        seleccionado = valor,
-                                        opciones = OpcionBinaria(TipoObstaculo.CARTON, R.drawable.objeto_iman, stringResource(R.string.isla_obstaculo_carton)) to
-                                            OpcionBinaria(TipoObstaculo.METAL_GRUESO, R.drawable.objeto_iman, stringResource(R.string.isla_obstaculo_metal_grueso)),
-                                        onSeleccion = { viewModel.cambiarVariablePrueba(nombre, it) },
-                                    )
-                                    else -> Unit
-                                }
-                            } else {
-                                Text(text = "$nombre: ${textoValorLegible(valor)}", color = MaterialTheme.colorScheme.onSurface)
-                            }
-                        },
-                    )
-                }
+                    val valor = estado.prueba.valorDe(reto.variableIndependiente)
+                    val nombre = reto.variableIndependiente
 
-                if (estado.ultimoAvisoInjusto) {
-                    PanelLegible {
-                        Text(
-                            stringResource(R.string.isla_alerta_no_es_justa),
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                }
-                if (estado.ultimoAvisoMagnitudRepetida) {
-                    PanelLegible {
-                        Text(
-                            stringResource(R.string.isla_aviso_magnitud_repetida),
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                }
-            }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        when (valor) {
+                            is Int -> PerillaGiratoria(
+                                valor = valor, rango = 0..20, etiqueta = nombre,
+                                onValorCambia = { viewModel.cambiarVariablePrueba(nombre, it) },
+                            )
+                            is Float -> PerillaGiratoria(
+                                valor = valor.toInt(), rango = rangoDeVariableContinua(nombre), etiqueta = nombre,
+                                onValorCambia = { viewModel.cambiarVariablePrueba(nombre, it.toFloat()) },
+                            )
+                            is Boolean -> InterruptorDiegetico(
+                                activado = valor,
+                                onCambia = { viewModel.cambiarVariablePrueba(nombre, it) },
+                                iconoActivado = R.drawable.chirimbolo_celebra,
+                                iconoDesactivado = R.drawable.chirimbolo_confundido,
+                                descripcionActivado = "$nombre activado",
+                                descripcionDesactivado = "$nombre desactivado",
+                            )
+                            is TipoSuperficie -> SelectorBinario(
+                                seleccionado = valor,
+                                opciones = OpcionBinaria(TipoSuperficie.LISA, R.drawable.objeto_carrito, stringResource(R.string.isla_superficie_lisa)) to
+                                    OpcionBinaria(TipoSuperficie.RUGOSA, R.drawable.objeto_carrito, stringResource(R.string.isla_superficie_rugosa)),
+                                onSeleccion = { viewModel.cambiarVariablePrueba(nombre, it) },
+                            )
+                            is TipoObstaculo -> SelectorBinario(
+                                seleccionado = valor,
+                                opciones = OpcionBinaria(TipoObstaculo.CARTON, R.drawable.objeto_iman, stringResource(R.string.isla_obstaculo_carton)) to
+                                    OpcionBinaria(TipoObstaculo.METAL_GRUESO, R.drawable.objeto_iman, stringResource(R.string.isla_obstaculo_metal_grueso)),
+                                onSeleccion = { viewModel.cambiarVariablePrueba(nombre, it) },
+                            )
+                            else -> Unit
+                        }
 
-            if (estado.mostrarPreguntaTendencia) {
-                PanelLegible {
-                    Text(
-                        stringResource(R.string.isla_pregunta_tendencia),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Row {
-                        Button(onClick = { viewModel.elegirTendencia(Tendencia.SUBE) }) {
-                            Text(stringResource(R.string.isla_tendencia_sube))
-                        }
-                        Button(onClick = { viewModel.elegirTendencia(Tendencia.BAJA) }) {
-                            Text(stringResource(R.string.isla_tendencia_baja))
-                        }
-                        Button(onClick = { viewModel.elegirTendencia(Tendencia.NO_CAMBIA) }) {
-                            Text(stringResource(R.string.isla_tendencia_no_cambia))
+                        Button(onClick = viewModel::probar, modifier = Modifier.padding(top = 16.dp)) {
+                            Text(stringResource(R.string.isla_boton_probar))
                         }
                     }
                 }
@@ -182,23 +147,12 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
 }
 
 /**
- * El lado Control siempre se muestra como texto plano (nunca es tocable), así que a
- * diferencia de la Prueba no pasa por un ícono con su propia descripción — sin esto,
- * un booleano se leía literalmente "true"/"false" y un obstáculo "METAL_GRUESO", en vez
- * de palabras que un niño de 8 a 12 años reconozca.
+ * "distancia" (Isla de la Cueva) se aplana en 0 a partir de los 12.5 m reales
+ * (`MotorEco`) — con el rango genérico de 0..60 casi todo el arrastre no cambiaba
+ * nada. Las demás variables continuas (altura) escalan suave en todo 0..60, sin zona
+ * muerta, así que no necesitan un rango propio.
  */
-@Composable
-private fun textoValorLegible(valor: Any): String = when (valor) {
-    is Boolean -> if (valor) stringResource(R.string.valor_si) else stringResource(R.string.valor_no)
-    is TipoSuperficie -> if (valor == TipoSuperficie.LISA) {
-        stringResource(R.string.isla_superficie_lisa)
-    } else {
-        stringResource(R.string.isla_superficie_rugosa)
-    }
-    is TipoObstaculo -> if (valor == TipoObstaculo.CARTON) {
-        stringResource(R.string.isla_obstaculo_carton)
-    } else {
-        stringResource(R.string.isla_obstaculo_metal_grueso)
-    }
-    else -> valor.toString()
+private fun rangoDeVariableContinua(nombre: String): IntRange = when (nombre) {
+    "distancia" -> 0..15
+    else -> 0..60
 }
