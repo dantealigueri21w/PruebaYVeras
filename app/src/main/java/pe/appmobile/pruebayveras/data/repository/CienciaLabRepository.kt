@@ -8,6 +8,8 @@ import pe.appmobile.pruebayveras.data.seed.SemillaInsignias
 import pe.appmobile.pruebayveras.data.seed.SemillaIslas
 import pe.appmobile.pruebayveras.data.seed.SemillaPiezas
 import pe.appmobile.pruebayveras.data.seed.SemillaRetos
+import pe.appmobile.pruebayveras.domain.engine.MotorCuadernoDatos
+import pe.appmobile.pruebayveras.domain.engine.Tendencia
 
 class CienciaLabRepository(private val db: AppDatabase) {
 
@@ -23,17 +25,38 @@ class CienciaLabRepository(private val db: AppDatabase) {
     suspend fun registrarIntento(
         idReto: String,
         variableCambiada: String,
-        valorProbado: String,
-        resultadoReal: Float,
-        logrado: Boolean,
+        valorControl: String,
+        valorPrueba: String,
+        resultadoControl: Float,
+        resultadoPrueba: Float,
+        fueJusta: Boolean,
     ) {
         db.intentoDao().guardar(
             IntentoEntity(
                 idReto = idReto,
                 variableCambiada = variableCambiada,
-                valorProbado = valorProbado,
-                resultadoReal = resultadoReal,
-                logrado = logrado,
+                valorControl = valorControl,
+                valorPrueba = valorPrueba,
+                resultadoControl = resultadoControl,
+                resultadoPrueba = resultadoPrueba,
+                fueJusta = fueJusta,
+                timestamp = System.currentTimeMillis(),
+            )
+        )
+    }
+
+    suspend fun tendenciaRealDe(idReto: String): Tendencia {
+        val intentos = db.intentoDao().observarPorReto(idReto).first()
+        val datos = intentos.filter { it.fueJusta }.map { it.resultadoPrueba }
+        return MotorCuadernoDatos.tendenciaReal(datos)
+    }
+
+    suspend fun registrarPaginaCuaderno(idReto: String, tendenciaElegida: Tendencia, tendenciaCorrecta: Boolean) {
+        db.paginaCuadernoDao().guardar(
+            PaginaCuadernoEntity(
+                idReto = idReto,
+                tendenciaElegida = tendenciaElegida.name,
+                tendenciaCorrecta = tendenciaCorrecta,
                 timestamp = System.currentTimeMillis(),
             )
         )
@@ -42,16 +65,5 @@ class CienciaLabRepository(private val db: AppDatabase) {
     suspend fun confirmarPieza(idPieza: String) {
         val pieza = db.piezaChirimboloDao().observarTodas().first().first { it.idPieza == idPieza }
         db.piezaChirimboloDao().actualizar(pieza.copy(confirmada = true))
-    }
-
-    /** Una página real por reto logrado — nunca de ejemplo. */
-    suspend fun registrarPaginaLogro(idReto: String, resultadoReal: Float) {
-        db.paginaCuadernoDao().guardar(
-            PaginaCuadernoEntity(
-                idReto = idReto,
-                resultadoReal = resultadoReal,
-                timestamp = System.currentTimeMillis(),
-            )
-        )
     }
 }
