@@ -271,3 +271,60 @@ amerita una pantalla de resultado antes de la entrega final.
 El zip de código (`1.CodigoFuentePruebaYVeras.zip`) no se tocó: viene de
 `git archive` sobre el código fuente, que nunca dependió de qué APK estuviera
 instalado en el emulador.
+
+## 26/08/2026 — Tres bugs reales de jugabilidad, encontrados jugando el APK ya entregado
+
+Al instalar el APK entregado en un teléfono real aparecieron tres problemas que
+ningún test había atrapado:
+
+1. **Texto negro fijo, ilegible sobre cualquier fondo.** `PruebaYVerasTheme`
+   nunca envolvía el contenido en un `Surface`, así que `LocalContentColor`
+   quedaba fijo en el negro por defecto de Material sin importar el tema. Se
+   agregó el `Surface` que faltaba, y además un fondo propio (panel opaco, el
+   mismo tratamiento que ya tenía el globo de Chirimbolo) detrás de los
+   textos que caen sobre la imagen de cada isla — el color correcto no
+   bastaba porque el fondo real es una ilustración con zonas claras y
+   oscuras a la vez.
+2. **La perilla giratoria no se podía usar del todo.** Dos causas distintas:
+   `pointerInput(rango)` no se reiniciaba entre arrastres, así que el gesto
+   quedaba leyendo para siempre el valor con el que se dibujó la primera vez
+   (arreglado con `rememberUpdatedState`); y la sensibilidad era una
+   cantidad fija de píxeles por paso, así que un rango de 0..60 necesitaba
+   un arrastre casi tres veces más largo que uno de 0..20 para completarse
+   (arreglado escalando la sensibilidad a la amplitud de cada rango).
+3. **"Correr la prueba" avanzaba en silencio.** Calculaba el resultado real,
+   lo guardaba, y pasaba al siguiente reto sin mostrar nada — existían
+   strings ya escritos (`isla_resultado_control`/`isla_resultado_prueba`)
+   que nunca se usaban en ningún lado del código. Ahora `ejecutarPrueba()`
+   deja el resultado visible (`ultimoResultado`) hasta que el jugador toca
+   "Continuar" (`continuarTrasResultado()`).
+
+Aprovechando la revisión, se corrigieron gaps de comprensión encontrados al
+releer la ficha (`fichas/30-CIENCIALAB.md`) contra la implementación real:
+
+- El Cuaderno de Campo mostraba literalmente el id interno del reto
+  (`reto_marea_dificil — SUBE (✓)`), no el gráfico en Canvas con datos
+  reales que promete la ficha. Ahora muestra el nombre de la isla, la
+  dificultad, un gráfico real (Canvas) con los `intento` guardados de ese
+  reto — nunca datos de ejemplo — y la conclusión en palabras.
+- El lado Control de un booleano o un enum se leía literalmente
+  `paracaidas: false` / `material: METAL_GRUESO`. Ahora usa las mismas
+  palabras en español que ya se usaban del lado Prueba.
+- Las dos islas de arranque (Marea, Viento) tenían la corazonada de
+  Chirimbolo demasiado escueta para ser el único tutorial de la app (la
+  ficha pide "sin tutorial", apoyado en que el diálogo de los primeros 30
+  segundos explique el mecanismo). Se amplió el texto de esas dos para
+  narrar explícitamente "dos montajes iguales, cambio solo una cosa", como
+  en el ejemplo que la propia ficha ya trae.
+
+**Pendiente, no tocado en este cierre — es una decisión de alcance, no un
+ajuste rápido.** La ficha describe el reto "difícil" de cada isla corriendo
+*tres* montajes (varias magnitudes de la misma variable) para construir la
+tendencia real. Hoy los tres retos (fácil/medio/difícil) de cada isla usan
+la misma mecánica de dos montajes. Como consecuencia, en 6 de las 9 islas la
+pregunta final "¿sube/baja/no cambia?" termina comparando resultados de
+retos que en realidad probaron variables distintas (ejemplo, Isla del
+Viento: paracaídas, paracaídas, altura), lo que puede sentirse arbitrario.
+Implementarlo bien pide un montaje de tres vías y una forma de repetir una
+prueba dentro de un mismo reto — trabajo aparte, no un ajuste de una
+función.

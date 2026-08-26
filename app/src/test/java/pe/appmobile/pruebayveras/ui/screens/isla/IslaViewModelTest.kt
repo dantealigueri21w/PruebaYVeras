@@ -47,12 +47,20 @@ class IslaViewModelTest {
         for ((indice, _) in retos.withIndex()) {
             viewModel.cambiarVariablePrueba("sal", indice + 1)
             viewModel.ejecutarPrueba()
-            var pasadasReto = 0
-            while (viewModel.estado.value.indiceRetoActual == indice && !viewModel.estado.value.mostrarPreguntaTendencia && pasadasReto < 100) {
+
+            // ejecutarPrueba() ya no avanza de reto por si sola: primero deja el
+            // resultado visible (ultimoResultado) para que el niño lo vea, y solo se
+            // avanza al llamar continuarTrasResultado() — el equivalente a tocar
+            // "Continuar" en el panel de resultado.
+            var pasadasResultado = 0
+            while (viewModel.estado.value.ultimoResultado == null && pasadasResultado < 100) {
                 shadowOf(Looper.getMainLooper()).idle()
                 kotlinx.coroutines.delay(50)
-                pasadasReto++
+                pasadasResultado++
             }
+            assertTrue("debe calcularse un resultado tras ejecutarPrueba en el reto $indice", viewModel.estado.value.ultimoResultado != null)
+
+            viewModel.continuarTrasResultado()
         }
 
         assertTrue("debe mostrar la pregunta de tendencia tras el ultimo reto", viewModel.estado.value.mostrarPreguntaTendencia)

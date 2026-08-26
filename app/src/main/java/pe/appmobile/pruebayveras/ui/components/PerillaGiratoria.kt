@@ -23,6 +23,12 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
 /**
+ * Cuanto hay que arrastrar, siempre, para recorrer un rango completo — sin importar
+ * si son 20 pasos o 60. Con esto, cualquier perilla se juega igual de comodo.
+ */
+private val DISTANCIA_RANGO_COMPLETO = 260.dp
+
+/**
  * Un dial que se gira arrastrando verticalmente: arriba sube el valor, abajo lo baja.
  * Reemplaza a `Slider` de Material (sección 3.1) — es un objeto del mundo (una perilla),
  * no una barra abstracta.
@@ -51,12 +57,21 @@ fun PerillaGiratoria(
             .size(120.dp)
             .semantics { contentDescription = "$etiqueta: $valor" }
             .pointerInput(rango) {
+                // Antes, 24px por paso era fijo sin importar el ancho del rango: un
+                // rango de 0..60 (las variables continuas, ej. altura, distancia)
+                // necesitaba un arrastre casi tres veces mas largo que uno de 0..20
+                // para llegar al tope, y un arrastre comodo de un solo gesto se
+                // quedaba a mitad de camino. Fijar la distancia TOTAL en vez del paso
+                // hace que cualquier rango se recorra completo con el mismo largo de
+                // arrastre.
+                val amplitud = (rango.last - rango.first).coerceAtLeast(1)
+                val pixelesPorPaso = DISTANCIA_RANGO_COMPLETO.toPx() / amplitud
                 detectDragGestures(
                     onDragStart = { arrastreAcumulado = 0f },
                     onDrag = { change, dragAmount ->
                         change.consume()
                         arrastreAcumulado -= dragAmount.y
-                        val pasos = (arrastreAcumulado / 24f).roundToInt()
+                        val pasos = (arrastreAcumulado / pixelesPorPaso).roundToInt()
                         val actual = valorActual.value
                         val nuevo = (actual + pasos).coerceIn(rango.first, rango.last)
                         if (nuevo != actual) {

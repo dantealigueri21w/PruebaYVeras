@@ -6,7 +6,9 @@ object SemillaRetos {
     val retos = listOf(
         // Isla de la Marea
         RetoEntity("reto_marea_facil", "isla_marea", "FACIL",
-            "Chirimbolo dice: \"este huevo no se hunde igual en todos los charcos. ¿Será la sal?\"", "sal"),
+            "Chirimbolo dice: \"este huevo no se hunde igual en todos los charcos. Pongo dos " +
+                "charcos con la misma agua: a uno le echo sal, al otro no. ¿Será la sal la que " +
+                "cambia si flota?\"", "sal"),
         RetoEntity("reto_marea_medio", "isla_marea", "MEDIO",
             "Una isleña pregunta si el volumen de agua también cambia si el huevo flota.", "sal"),
         RetoEntity("reto_marea_dificil", "isla_marea", "DIFICIL",
@@ -14,7 +16,9 @@ object SemillaRetos {
 
         // Isla del Viento
         RetoEntity("reto_viento_facil", "isla_viento", "FACIL",
-            "Chirimbolo quiere saber si su aleta lo ayuda a caer más despacio, como un paracaídas.", "paracaidas"),
+            "Chirimbolo quiere saber si su aleta lo ayuda a caer más despacio. Suelta dos " +
+                "Chirimbolos iguales desde la misma altura: uno con la aleta puesta, el otro sin " +
+                "ella. ¿Cuál llega primero?", "paracaidas"),
         RetoEntity("reto_viento_medio", "isla_viento", "MEDIO",
             "Un isleño duda si la altura también cambia cuánto tarda en llegar al suelo.", "paracaidas"),
         RetoEntity("reto_viento_dificil", "isla_viento", "DIFICIL",

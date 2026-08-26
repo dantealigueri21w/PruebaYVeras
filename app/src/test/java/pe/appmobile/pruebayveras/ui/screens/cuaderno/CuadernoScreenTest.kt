@@ -1,6 +1,8 @@
 package pe.appmobile.pruebayveras.ui.screens.cuaderno
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -10,6 +12,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import pe.appmobile.pruebayveras.data.AppDatabase
+import pe.appmobile.pruebayveras.data.entity.IntentoEntity
 import pe.appmobile.pruebayveras.data.entity.PaginaCuadernoEntity
 import pe.appmobile.pruebayveras.ui.testutil.viewModelDeTest
 import pe.appmobile.pruebayveras.ui.theme.PruebaYVerasTheme
@@ -54,5 +57,34 @@ class CuadernoScreenTest {
             PruebaYVerasTheme { CuadernoScreen(viewModel = viewModel) }
         }
         compose.waitForIdle()
+    }
+
+    @Test
+    fun `una pagina muestra el nombre real de la isla, no el id interno del reto`() {
+        val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
+            .allowMainThreadQueries().build()
+        kotlinx.coroutines.runBlocking {
+            db.intentoDao().guardar(
+                IntentoEntity(
+                    idReto = "reto_marea_facil", variableCambiada = "sal",
+                    valorControl = "0", valorPrueba = "3",
+                    resultadoControl = 1.0f, resultadoPrueba = 2.5f,
+                    fueJusta = true, timestamp = 1000L,
+                ),
+            )
+            db.paginaCuadernoDao().guardar(
+                PaginaCuadernoEntity(idReto = "reto_marea_facil", tendenciaElegida = "SUBE", tendenciaCorrecta = true, timestamp = 1000L),
+            )
+        }
+        val viewModel = viewModelDeTest(store, CuadernoViewModel::class.java) { CuadernoViewModel(db) }
+
+        compose.setContent {
+            PruebaYVerasTheme { CuadernoScreen(viewModel = viewModel) }
+        }
+        compose.waitForIdle()
+
+        // Antes de este arreglo, la pagina mostraba literalmente el id interno
+        // ("reto_marea_facil") en vez de un nombre que un niño pueda leer.
+        compose.onNodeWithText("Isla de la Marea").assertIsDisplayed()
     }
 }

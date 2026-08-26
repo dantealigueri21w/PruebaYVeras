@@ -26,7 +26,13 @@ data class EstadoIsla(
     val resultadosPorReto: Map<String, Float> = emptyMap(),
     val mostrarPreguntaTendencia: Boolean = false,
     val piezaConfirmada: Boolean = false,
+    val ultimoResultado: ResultadoReto? = null,
 )
+
+/** Lo que arrojó el último "Correr la prueba", para mostrarlo antes de pasar al
+ * siguiente reto — sin esto la pantalla avanzaba en silencio y no parecía haber
+ * pasado nada. */
+data class ResultadoReto(val resultadoControl: Float, val resultadoPrueba: Float)
 
 class IslaViewModel(private val db: AppDatabase, private val idIsla: String) : ViewModel() {
 
@@ -79,16 +85,25 @@ class IslaViewModel(private val db: AppDatabase, private val idIsla: String) : V
                 fueJusta = true,
             )
 
-            val resultados = actual.resultadosPorReto + (reto.idReto to resultadoPrueba)
-            val esUltimoReto = actual.indiceRetoActual == actual.retos.lastIndex
-
             _estado.value = actual.copy(
-                resultadosPorReto = resultados,
-                indiceRetoActual = if (esUltimoReto) actual.indiceRetoActual else actual.indiceRetoActual + 1,
-                mostrarPreguntaTendencia = esUltimoReto,
-                prueba = Montaje(adaptador.variablesBase),
+                resultadosPorReto = actual.resultadosPorReto + (reto.idReto to resultadoPrueba),
+                ultimoResultado = ResultadoReto(resultadoControl, resultadoPrueba),
             )
         }
+    }
+
+    /** Avanza al siguiente reto (o abre la pregunta de tendencia si era el último) — se
+     * llama cuando el niño ya vio el resultado de [ejecutarPrueba] y toca "Continuar",
+     * nunca automáticamente, para que el resultado no desaparezca antes de leerlo. */
+    fun continuarTrasResultado() {
+        val actual = _estado.value
+        val esUltimoReto = actual.indiceRetoActual == actual.retos.lastIndex
+        _estado.value = actual.copy(
+            indiceRetoActual = if (esUltimoReto) actual.indiceRetoActual else actual.indiceRetoActual + 1,
+            mostrarPreguntaTendencia = esUltimoReto,
+            prueba = Montaje(adaptador.variablesBase),
+            ultimoResultado = null,
+        )
     }
 
     fun elegirTendencia(tendencia: Tendencia) {

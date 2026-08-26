@@ -8,8 +8,17 @@
     <string name="isla_alerta_no_es_justa">Eso ya no es una prueba justa: iguala primero</string>
     <string name="isla_montaje_control">Control</string>
     <string name="isla_montaje_prueba">Prueba</string>
+    <string name="isla_superficie_lisa">Superficie lisa</string>
+    <string name="isla_superficie_rugosa">Superficie rugosa</string>
+    <string name="isla_obstaculo_carton">Cartón</string>
+    <string name="isla_obstaculo_metal_grueso">Metal grueso</string>
+    <string name="valor_si">Sí</string>
+    <string name="valor_no">No</string>
     <string name="isla_resultado_control">Resultado del control</string>
     <string name="isla_resultado_prueba">Resultado de la prueba</string>
+    <string name="isla_resultado_titulo">Esto es lo que pasó</string>
+    <string name="isla_resultado_etiqueta_tendencia">El resultado:</string>
+    <string name="isla_resultado_continuar">Continuar</string>
     <string name="isla_pregunta_tendencia">¿Qué muestran tus datos?</string>
     <string name="isla_tendencia_sube">Sube</string>
     <string name="isla_tendencia_baja">Baja</string>
@@ -21,6 +30,13 @@
 
     <string name="cuaderno_titulo">El Cuaderno de Campo</string>
     <string name="cuaderno_vacio">Todavía no hay páginas. Resuelve tu primera prueba justa.</string>
+    <string name="cuaderno_dificultad_facil">Reto fácil</string>
+    <string name="cuaderno_dificultad_medio">Reto medio</string>
+    <string name="cuaderno_dificultad_dificil">Reto difícil</string>
+    <string name="cuaderno_tu_conclusion">Tu conclusión:</string>
+    <string name="cuaderno_conclusion_correcta">Coincide con tus propios datos</string>
+    <string name="cuaderno_conclusion_revisar">No coincide con tus propios datos — puedes revisarlo</string>
+    <string name="cd_grafico_cuaderno">Gráfico con los resultados reales de esta página, en el orden en que se corrieron</string>
 
     <string name="perfil_titulo">Tu perfil</string>
     <string name="perfil_alias_hint">Tu alias de explorador</string>

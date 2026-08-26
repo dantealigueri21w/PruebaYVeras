@@ -1,10 +1,12 @@
 package pe.appmobile.pruebayveras.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,14 +34,27 @@ fun MesaDoblePrueba(
     onPruebaInjusta: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth().padding(12.dp)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(20.dp))
+            .padding(16.dp),
+    ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             Column {
-                Text(stringResource(R.string.isla_montaje_control), style = MaterialTheme.typography.labelLarge)
+                Text(
+                    stringResource(R.string.isla_montaje_control),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
                 control.variables.forEach { variable -> contenidoVariable(variable.nombre, control, true) }
             }
             Column {
-                Text(stringResource(R.string.isla_montaje_prueba), style = MaterialTheme.typography.labelLarge)
+                Text(
+                    stringResource(R.string.isla_montaje_prueba),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
                 prueba.variables.forEach { variable -> contenidoVariable(variable.nombre, prueba, false) }
             }
         }
