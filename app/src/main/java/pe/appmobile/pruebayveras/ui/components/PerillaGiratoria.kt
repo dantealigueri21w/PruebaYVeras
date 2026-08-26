@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,13 @@ fun PerillaGiratoria(
     val colorPrimario = MaterialTheme.colorScheme.primary
     val colorSecundario = MaterialTheme.colorScheme.secondary
 
+    // pointerInput(rango) solo reinicia el gesto cuando cambia el rango, que es fijo
+    // por variable: si el arrastre leyera "valor" y "onValorCambia" directamente, el
+    // primer gesto los dejaria congelados para siempre en su valor inicial y la perilla
+    // se quedaria pegada en 0 (o en el limite del rango) sin poder moverse de verdad.
+    val valorActual = rememberUpdatedState(valor)
+    val onValorCambiaActual = rememberUpdatedState(onValorCambia)
+
     Box(
         modifier = modifier
             .size(120.dp)
@@ -49,9 +57,10 @@ fun PerillaGiratoria(
                         change.consume()
                         arrastreAcumulado -= dragAmount.y
                         val pasos = (arrastreAcumulado / 24f).roundToInt()
-                        val nuevo = (valor + pasos).coerceIn(rango.first, rango.last)
-                        if (nuevo != valor) {
-                            onValorCambia(nuevo)
+                        val actual = valorActual.value
+                        val nuevo = (actual + pasos).coerceIn(rango.first, rango.last)
+                        if (nuevo != actual) {
+                            onValorCambiaActual.value(nuevo)
                             arrastreAcumulado = 0f
                         }
                     },

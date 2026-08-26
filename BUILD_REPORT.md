@@ -199,3 +199,75 @@ Nada de esto afecta la regla central: **el mecanismo es el contenido** en
 las nueve islas — se manipula una perilla, un interruptor o un selector con
 gestos reales, el resultado sale de un motor real verificado contra una
 fuente real, y cada intento se guarda en Room de verdad.
+
+## 26/08/2026 — Entregable APLICATIVO completo (4/4 archivos)
+
+Faltaban dos de los cuatro archivos en `30.PruebaYVeras/` (el zip de código y
+el APK real). Se completaron y verificaron:
+
+- **`4.PruebaYVeras.v1.0.0.apk`**: el APK real de la corrida de GitHub
+  Actions sobre el commit `afdee7c` (el mismo que ya incluye los dos fixes
+  de navegación y Cuaderno de la sección anterior), no un build local nuevo.
+  Reverificado con `aapt2 dump badging`: `pe.appmobile.pruebayveras`,
+  `versionName 1.0.0`, único permiso `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
+  (sin `INTERNET`), ícono `icono_lanzador.webp` conectado,
+  `launchable-activity` correcta.
+- **`1.CodigoFuentePruebaYVeras.zip`**: generado con
+  `git archive --format=zip --prefix= -o ... HEAD` sobre el mismo commit,
+  working tree limpio. Verificado: estructura raíz directa (sin carpeta
+  intermedia), sin carpetas de configuración de herramientas de desarrollo
+  coladas, `.gitignore` sin nombres de herramientas. Verificación de la
+  sección 11.4 del prompt maestro sobre todo el código fuente comiteado: sin
+  coincidencias.
+
+Estructura final igual a `39.Numeropolis/` (referencia ya entregada):
+`1.CodigoFuente*.zip`, `2.Manual_Usuario*.pdf`, `3.Memoria_Descriptiva*.pdf`,
+`4.*.v1.0.0.apk`.
+
+**Sigue pendiente, sin tocar en este cierre:** el bug del botón "volver" de
+`IslaScreen` descrito arriba ("Qué sigue simplificado"). No bloquea el uso
+(el gesto de sistema Atrás funciona siempre) pero sigue sin diagnosticarse.
+
+## 26/08/2026 — Corregido: el manual usaba capturas de un APK que no era el entregado
+
+El `2.Manual_Usuario_PruebaYVeras.pdf` de la sección anterior tenía capturas
+reales de un emulador, pero instaladas desde `apk (1).zip`, que por tamaño de
+artifact (`22 796 650` bytes) coincide con la corrida de GitHub Actions del
+commit `a7b4c23` (anterior al fix de navegación), no con `afdee7c` (el commit
+real de esta fase). Se detectó porque esa captura de "El Archipiélago" no
+mostraba la fila de cuatro accesos que el propio fix de este documento dice
+haber agregado. Comparando los cuatro `apk (N).zip` descargados en `Downloads`
+contra el `size_in_bytes` que reporta la API de GitHub Actions para cada
+corrida (`/actions/runs/<id>/artifacts`, sin necesitar autenticación por ser
+repositorio público), `apk (2).zip` (`22 810 867` bytes) es el que coincide
+con la corrida de `afdee7c`.
+
+Con `apk (2).zip` instalado (mismo hash SHA-256 que ya tenía el emulador antes
+de esta sesión, confirmando que sí es una build real de Actions) se
+verificaron por accesibilidad las cuatro etiquetas nuevas (`Abrir el Cuaderno
+de Campo`, `Abrir el Cobertizo de Chirimbolo`, `Abrir tu perfil`, `Abrir
+Ajustes`, bounds exactos vía `uiautomator dump`) y se rehicieron las 12
+capturas del manual jugando el recorrido real: Archipiélago, los tres retos
+de Isla de la Marea con la perilla de sal realmente arrastrada (`uiautomator
+dump` para coordenadas exactas, nunca a ojo), la pregunta de tendencia,
+Cuaderno, Cobertizo, Perfil (alias y avatar elegidos de verdad) y Ajustes, más
+Isla del Viento, del Faro y del Reflejo para la sección 7.
+
+**Hallazgo real durante la verificación:** tocar "Sube"/"Baja"/"No cambia" en
+el reto difícil no produce ningún cambio visible en `IslaScreen` (se
+comprobó reintentando con más espera y revisando el árbol de accesibilidad:
+el nodo sigue siendo clicable y en el mismo estado). La respuesta sí se
+guarda de verdad: confirmado abriendo el Cuaderno después y encontrando la
+página real `reto_marea_dificil — SUBE (incorrecta)`. Con
+`DENSIDAD_AGUA_DULCE=1.00`, `DENSIDAD_HUEVO=1.03` y
+`DENSIDAD_POR_CUCHARADA=0.01` (`MotorFlotabilidad.kt`), ni 0 ni 1 cucharada
+alcanzan a flotar (densidad 1.00 y 1.01, ambas por debajo de 1.03), así que
+la tendencia real entre esos dos puntos es "No cambia", no "Sube" — la
+respuesta se marcó incorrecta correctamente, no es un bug del motor. Lo que
+sí falta es una confirmación visual en `IslaScreen` de que el toque se
+registró (hoy solo se nota volviendo al Cuaderno). Pendiente de valorar si
+amerita una pantalla de resultado antes de la entrega final.
+
+El zip de código (`1.CodigoFuentePruebaYVeras.zip`) no se tocó: viene de
+`git archive` sobre el código fuente, que nunca dependió de qué APK estuviera
+instalado en el emulador.
