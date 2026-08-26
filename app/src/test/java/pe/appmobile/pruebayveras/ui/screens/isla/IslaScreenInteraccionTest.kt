@@ -4,16 +4,19 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import pe.appmobile.pruebayveras.data.AppDatabase
+import pe.appmobile.pruebayveras.ui.testutil.viewModelDeTest
 import pe.appmobile.pruebayveras.ui.theme.PruebaYVerasTheme
 
 @RunWith(RobolectricTestRunner::class)
@@ -22,11 +25,18 @@ class IslaScreenInteraccionTest {
     @get:Rule
     val compose = createComposeRule()
 
+    private val store = ViewModelStore()
+
+    @After
+    fun cerrarViewModel() {
+        store.clear()
+    }
+
     @Test
     fun `correr la prueba en la Isla de la Marea guarda un intento real`() {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .allowMainThreadQueries().build()
-        val viewModel = IslaViewModel(db, "isla_marea")
+        val viewModel = viewModelDeTest(store, IslaViewModel::class.java) { IslaViewModel(db, "isla_marea") }
 
         compose.setContent {
             PruebaYVerasTheme { IslaScreen(viewModel = viewModel, onVolver = {}) }
