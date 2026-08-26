@@ -24,6 +24,7 @@
     <string name="isla_ayuda_titulo">Una pista</string>
     <string name="isla_ayuda_texto">Prueba a cambiar solo %1$s esta vez, y deja todo lo demás exactamente igual que en el Control.</string>
     <string name="cd_ayuda">Pedir ayuda</string>
+    <string name="isla_tutorial_texto">Chirimbolo señala: el Control no se toca, es la referencia. En la Prueba sí puedes cambiar cosas. Cuando estés listo, corre la prueba.</string>
 
     <string name="isla_prueba_injusta_titulo">Eso cambió más de una cosa</string>
     <string name="isla_prueba_injusta_explicacion">Cambiaste %1$s a la vez, así que no podemos saber cuál de esas causó el resultado. Iguala todo menos una cosa y vuelve a correr la prueba.</string>

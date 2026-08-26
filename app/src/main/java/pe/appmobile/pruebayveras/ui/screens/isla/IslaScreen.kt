@@ -94,6 +94,18 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
                 }
             } else {
                 val reto = estado.retoActual ?: return@Column
+                if (estado.esPrimerTutorial) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(chirimboloPose("senala")),
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                        )
+                        PanelLegible {
+                            Text(stringResource(R.string.isla_tutorial_texto), style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
                         painter = painterResource(chirimboloPose("explica")),

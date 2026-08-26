@@ -48,6 +48,13 @@ class IslaScreenTest {
      * apenas se carga el reto — nunca bloqueada, a diferencia del botón "¡Pruébalo!" de
      * la mecánica anterior. */
     private fun rendear(idIsla: String) {
+        cargarViewModel(idIsla)
+    }
+
+    /** Igual que [rendear], pero devuelve el ViewModel ya cargado para que el test
+     * pueda seguir interactuando con él (por ejemplo, correr la prueba y esperar el
+     * resultado) en vez de solo confirmar que la pantalla no revienta. */
+    private fun cargarViewModel(idIsla: String): IslaViewModel {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .allowMainThreadQueries().build()
         val viewModel = viewModelDeTest(store, IslaViewModel::class.java) { IslaViewModel(db, idIsla) }
@@ -65,6 +72,7 @@ class IslaScreenTest {
         }
         assertTrue("los retos de $idIsla deben haberse cargado", viewModel.estado.value.retos.isNotEmpty())
         compose.onNodeWithText("Correr la prueba").performScrollTo().assertIsDisplayed()
+        return viewModel
     }
 
     @Test
@@ -93,4 +101,30 @@ class IslaScreenTest {
 
     @Test
     fun `isla del reflejo no revienta la app`() = rendear("isla_reflejo")
+
+    @Test
+    fun `el tutorial jugado solo aparece en el primer reto de la isla de la marea`() {
+        val viewModel = cargarViewModel("isla_marea")
+        // No assertIsDisplayed(): cargarViewModel ya hizo scroll hasta "Correr la prueba",
+        // y el aviso del tutorial queda antes en la misma columna — sigue en el árbol,
+        // pero fuera del viewport visible. Lo que importa aquí es que exista.
+        compose.onNodeWithText("Chirimbolo señala", substring = true).assertExists()
+
+        viewModel.ejecutarPrueba()
+        var pasadas = 0
+        while (viewModel.estado.value.ultimoResultado == null && pasadas < 100) {
+            Thread.sleep(50)
+            compose.waitForIdle()
+            pasadas++
+        }
+        assertTrue("la prueba debio arrojar un resultado", viewModel.estado.value.ultimoResultado != null)
+        compose.waitForIdle()
+        compose.onNodeWithText("Chirimbolo señala", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun `el tutorial jugado no aparece en una isla distinta a la marea`() {
+        cargarViewModel("isla_viento")
+        compose.onNodeWithText("Chirimbolo señala", substring = true).assertDoesNotExist()
+    }
 }
