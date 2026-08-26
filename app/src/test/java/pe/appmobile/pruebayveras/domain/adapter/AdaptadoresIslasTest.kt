@@ -12,7 +12,7 @@ class AdaptadoresIslasTest {
 
     @Test
     fun `marea calcula la altura de flotacion con 3 cucharadas de sal`() {
-        val montaje = Montaje(listOf(Variable("sal", 3)))
+        val montaje = Montaje(listOf(Variable("sal", 3), Variable("volumenAgua", 250)))
         assertTrue(AdaptadorMarea.calcular(montaje) >= 0f)
     }
 
@@ -38,15 +38,15 @@ class AdaptadoresIslasTest {
 
     @Test
     fun `faro atrae mas papelitos con mas frotadas`() {
-        val pocas = Montaje(listOf(Variable("frotadas", 3)))
-        val muchas = Montaje(listOf(Variable("frotadas", 15)))
+        val pocas = Montaje(listOf(Variable("frotadas", 3), Variable("distancia", 5)))
+        val muchas = Montaje(listOf(Variable("frotadas", 15), Variable("distancia", 5)))
         assertTrue(AdaptadorFaro.calcular(muchas) > AdaptadorFaro.calcular(pocas))
     }
 
     @Test
     fun `olas disuelve mas rapido con agua tibia, tiempo menor`() {
-        val fria = Montaje(listOf(Variable("temperatura", 5)))
-        val tibia = Montaje(listOf(Variable("temperatura", 45)))
+        val fria = Montaje(listOf(Variable("temperatura", 5), Variable("azucar", 10)))
+        val tibia = Montaje(listOf(Variable("temperatura", 45), Variable("azucar", 10)))
         assertTrue(AdaptadorOlas.calcular(tibia) < AdaptadorOlas.calcular(fria))
     }
 

@@ -33,4 +33,11 @@ class MotorEstaticaTest {
     fun `nueve frotadas atraen tres papelitos segun la formula`() {
         assertEquals(3, MotorEstatica.papelitosAtraidos(frotadas = 9))
     }
+
+    @Test
+    fun `mas distancia atrae menos papelitos, con las mismas frotadas`() {
+        val cerca = MotorEstatica.papelitosAtraidos(frotadas = 9, distanciaCm = 5)
+        val lejos = MotorEstatica.papelitosAtraidos(frotadas = 9, distanciaCm = 15)
+        assertTrue(lejos < cerca)
+    }
 }

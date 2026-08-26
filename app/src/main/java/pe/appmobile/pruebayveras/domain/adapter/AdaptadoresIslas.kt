@@ -15,9 +15,12 @@ import pe.appmobile.pruebayveras.domain.model.TipoSuperficie
 import pe.appmobile.pruebayveras.domain.model.Variable
 
 object AdaptadorMarea : AdaptadorIsla {
-    override val variablesBase = listOf(Variable("sal", 0))
+    override val variablesBase = listOf(Variable("sal", 0), Variable("volumenAgua", 250))
     override fun calcular(montaje: Montaje) =
-        MotorFlotabilidad.calcular(montaje.valorDe("sal") as Int).alturaFlotacion
+        MotorFlotabilidad.calcular(
+            cucharadasDeSal = montaje.valorDe("sal") as Int,
+            volumenAguaMl = montaje.valorDe("volumenAgua") as Int,
+        ).alturaFlotacion
 }
 
 object AdaptadorViento : AdaptadorIsla {
@@ -46,15 +49,19 @@ object AdaptadorCueva : AdaptadorIsla {
 }
 
 object AdaptadorFaro : AdaptadorIsla {
-    override val variablesBase = listOf(Variable("frotadas", 0))
-    override fun calcular(montaje: Montaje) =
-        MotorEstatica.papelitosAtraidos(montaje.valorDe("frotadas") as Int).toFloat()
+    override val variablesBase = listOf(Variable("frotadas", 0), Variable("distancia", 5))
+    override fun calcular(montaje: Montaje) = MotorEstatica.papelitosAtraidos(
+        frotadas = montaje.valorDe("frotadas") as Int,
+        distanciaCm = montaje.valorDe("distancia") as Int,
+    ).toFloat()
 }
 
 object AdaptadorOlas : AdaptadorIsla {
-    override val variablesBase = listOf(Variable("temperatura", 20))
-    override fun calcular(montaje: Montaje) =
-        MotorDisolucion.tiempoSegundos(montaje.valorDe("temperatura") as Int).toFloat()
+    override val variablesBase = listOf(Variable("temperatura", 20), Variable("azucar", 10))
+    override fun calcular(montaje: Montaje) = MotorDisolucion.tiempoSegundos(
+        temperaturaC = montaje.valorDe("temperatura") as Int,
+        cantidadAzucarG = montaje.valorDe("azucar") as Int,
+    ).toFloat()
 }
 
 object AdaptadorRisco : AdaptadorIsla {

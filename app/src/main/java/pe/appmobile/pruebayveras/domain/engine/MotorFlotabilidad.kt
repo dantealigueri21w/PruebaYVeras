@@ -13,7 +13,12 @@ object MotorFlotabilidad {
         return DENSIDAD_AGUA_DULCE + (cucharadas * DENSIDAD_POR_CUCHARADA)
     }
 
-    fun calcular(cucharadasDeSal: Int): Resultado {
+    /**
+     * [volumenAguaMl] no entra en la fórmula a propósito: la densidad es una propiedad
+     * intensiva, no depende de cuánta agua hay — es la variable señuelo real de esta
+     * isla (reto_marea_medio ya la menciona en su texto).
+     */
+    fun calcular(cucharadasDeSal: Int, volumenAguaMl: Int = 250): Resultado {
         val densidad = densidadAgua(cucharadasDeSal)
         val diferencia = densidad - DENSIDAD_HUEVO
         val flota = diferencia >= 0f

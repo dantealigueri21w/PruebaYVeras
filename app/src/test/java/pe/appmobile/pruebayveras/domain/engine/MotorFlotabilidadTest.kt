@@ -45,4 +45,11 @@ class MotorFlotabilidadTest {
         val densidad = MotorFlotabilidad.densidadAgua(cucharadasDeSal = 5)
         assertEquals(1.05f, densidad, 0.001f)
     }
+
+    @Test
+    fun `el volumen de agua no cambia la densidad ni la altura de flotacion`() {
+        val conVolumenChico = MotorFlotabilidad.calcular(cucharadasDeSal = 3, volumenAguaMl = 150)
+        val conVolumenGrande = MotorFlotabilidad.calcular(cucharadasDeSal = 3, volumenAguaMl = 500)
+        assertEquals(conVolumenChico.alturaFlotacion, conVolumenGrande.alturaFlotacion, 0.001f)
+    }
 }

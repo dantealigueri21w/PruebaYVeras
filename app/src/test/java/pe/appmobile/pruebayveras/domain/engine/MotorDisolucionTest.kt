@@ -30,4 +30,11 @@ class MotorDisolucionTest {
         val aNegativa = MotorDisolucion.tiempoSegundos(temperaturaC = -10)
         assertEquals(aCero, aNegativa)
     }
+
+    @Test
+    fun `mas azucar tarda mas en disolverse, a la misma temperatura`() {
+        val pocaAzucar = MotorDisolucion.tiempoSegundos(temperaturaC = 20, cantidadAzucarG = 10)
+        val muchaAzucar = MotorDisolucion.tiempoSegundos(temperaturaC = 20, cantidadAzucarG = 30)
+        assertTrue(muchaAzucar > pocaAzucar)
+    }
 }
