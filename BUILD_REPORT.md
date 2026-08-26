@@ -60,11 +60,99 @@ Room no soporte de forma nativa, así que se eliminó el archivo y la anotación
 se usa — el mismo criterio de "no simular una función que no existe" que pide
 la sección 1 del prompt maestro, aplicado a una clase de infraestructura.
 
-## Qué falta (Parte 2, plan aparte)
+## 25/08/2026 — Parte 2 cerrada: las 14 pantallas, arte integrado, APK real
 
-Tema y paleta, los componentes reutilizables no genéricos de la sección 3.1
-(mesa de doble montaje, formas propias, navegación diegética), las 14
-pantallas, la integración del arte generado, y la verificación
-completa con `assembleDebug` + `lintDebug` + pruebas de Compose con
-Robolectric (sección 10.1). No se declara terminada la app hasta que la
-Parte 2 también esté verde.
+Sigue el plan `.superpowers/plans/2026-08-25-pruebayveras-ui-pantallas.md`.
+Tema con paleta verificada por contraste WCAG, tres formas propias
+(`GenericShape`), tres componentes manipuladores que reemplazan
+`Slider`/`Switch` de Material, `MesaDoblePrueba` reutilizable en las nueve
+islas vía `AdaptadorIsla`, navegación diegética en el Archipiélago, y las
+83 ilustraciones de la Parte de arte ya integradas.
+
+### `./gradlew testDebugUnitTest` — 118 tests, 0 fallos, 0 errores
+
+```
+BUILD SUCCESSFUL in 1m 7s
+29 actionable tasks: 29 executed
+```
+
+34 tests nuevos sobre los 84 de la Parte 1: `ContrasteTest` (3),
+`FormasPropiasTest` (3), `MesaDoblePruebaTest` (2), `AdaptadoresIslasTest`
+(9, uno por isla), `IslaScreenTest` (9, uno por isla, con contenido real
+verificado — no solo "no revienta"), `IslaScreenInteraccionTest` (1),
+`ArchipielagoScreenTest` (1), `CobertizoScreenTest` (2), `CuadernoScreenTest`
+(2), `PerfilScreenTest` (1), `AjustesScreenTest` (1).
+
+### `./gradlew lintDebug` — 0 errores, 29 avisos
+
+20 son `UnusedResources`: 13 objetos manipulables (`objeto_huevo`,
+`objeto_sal`, etc.) que todavía no se muestran en pantalla — los
+manipuladores reales (perilla, interruptor, selector) ya funcionan con
+gestos y datos reales, pero usan arte genérico de relleno en vez del
+objeto específico de cada isla (ver "Qué sigue simplificado" abajo) — y 7
+strings de encabezados/descripciones para pulido futuro (`archipielago_titulo`,
+`cuaderno_titulo`, `cd_isla_bloqueada`, `cd_isla_completada`,
+`isla_resultado_control`, `isla_resultado_prueba`). El resto son versiones
+de librería ancladas a propósito, igual que en la Parte 1.
+
+### `./gradlew assembleDebug` — APK real generado y verificado
+
+| Dato | Valor |
+|---|---|
+| Archivo | `app/build/outputs/apk/debug/app-debug.apk` |
+| Tamaño | 23 MB (código + las 83 ilustraciones) |
+| `applicationId` | `pe.appmobile.pruebayveras` |
+| `versionName` / `versionCode` | `1.0.0` / `1` |
+| Permisos | Ninguno de red. El único presente es `pe.appmobile.pruebayveras.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, un permiso propio y benigno que AndroidX agrega automáticamente para receptores dinámicos en Android 13+ — no otorga ninguna capacidad de red ni de datos; confirmado con `grep -i internet` sobre el `aapt2 dump badging`, sin resultados |
+| Icono | Conectado: `icono_lanzador.webp`, visible en `aapt2 dump badging` |
+
+### Dos errores reales encontrados y corregidos durante la construcción
+
+**1. Tres retos "difícil" tenían `variableIndependiente` inconsistente con su
+propio texto.** `reto_viento_dificil` decía `"paracaidas"` pero el texto
+describe variar la altura; `reto_jardin_dificil` decía `"luz"` pero describe
+variar los días; `reto_reflejo_dificil` decía `"color"` pero describe variar
+los minutos al sol. Encontrado al diseñar los adaptadores de isla, antes de
+escribir código — se corrigió `SemillaRetos.kt` en las tres líneas.
+
+**2. Los tests de pantalla interferían entre sí al correr la suite completa.**
+Cada `IslaViewModel`/`ArchipielagoViewModel`/etc. lanza una corrutina en su
+`init` (siembra la base, carga datos) usando `viewModelScope` — pero un test
+unitario que instancia el ViewModel a mano, sin pasar por un `ViewModelStore`
+real, nunca cancela esa corrutina. Corriendo cada test de pantalla solo, todos
+pasaban; corriendo la suite completa junta, 3 tests fallaban con
+`IllegalStateException` de SQLite o con una excepción de un test anterior
+atribuida al siguiente — la corrutina de un test seguía viva y tocaba una
+base de datos en memoria que ya no existía. Se corrigió creando cada
+ViewModel de test dentro de un `ViewModelStore` real (`viewModelDeTest()`,
+en `ui/testutil/`) y cerrándolo en `@After` con `store.clear()` — el mismo
+mecanismo que usa Android en producción para destruir un ViewModel cuando su
+dueño desaparece. Además, `compose.waitForIdle()` no siempre alcanza a que
+termine una corrutina que usa el executor propio de Room (un hilo de fondo
+real, no el reloj de Compose); donde hace falta el resultado de esa
+corrutina antes de continuar, se sondea con `Thread.sleep` real en vez de
+confiar en una sola pasada de idle.
+
+## Qué sigue simplificado — dicho, no escondido
+
+- **Los 13 objetos manipulables** (huevo, sal, paracaídas, maceta, campana,
+  globo, azúcar, telas, termómetro, clip) están procesados e integrados en
+  `drawable-nodpi/`, pero `IslaScreen` todavía no los muestra: la perilla usa
+  un arco de progreso dibujado en `Canvas`, y el interruptor/selector
+  reutilizan arte de Chirimbolo o de otro objeto como marcador. La mecánica
+  es real (gestos reales, motor real, dato persistido real) — lo que falta
+  es la piel visual específica de cada objeto, no la interacción.
+- **`posicionesIslas` en `ArchipielagoScreen`** son coordenadas relativas
+  estimadas a mano sobre `mapa_archipielago.webp`, no medidas por análisis de
+  imagen — revisar visualmente contra el mapa real antes de la entrega final.
+- **Sin sonido ni háptica.** Los interruptores de Ajustes existen y cambian
+  de estado, pero no hay ningún efecto conectado detrás.
+- **Sin capturas del manual de usuario ni memoria descriptiva.** Empiezan en
+  la Fase 2, después de instalar el APK real que genere GitHub Actions — no
+  el de esta compilación local (sección 15 del prompt maestro: mismo código,
+  hash distinto).
+
+Nada de esto afecta la regla central: **el mecanismo es el contenido** en
+las nueve islas — se manipula una perilla, un interruptor o un selector con
+gestos reales, el resultado sale de un motor real verificado contra una
+fuente real, y cada intento se guarda en Room de verdad.
