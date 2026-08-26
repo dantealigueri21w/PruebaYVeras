@@ -79,4 +79,15 @@ class CienciaLabRepositoryTest {
             .first { it.idPieza == "pieza_tanque_flotador" }
         assertTrue(pieza.confirmada)
     }
+
+    @Test
+    fun `registrar una pagina de cuaderno queda guardada de verdad`() = runBlocking {
+        repository.registrarPaginaCuaderno("reto_marea_dificil", Tendencia.SUBE, tendenciaCorrecta = true)
+
+        val paginas = db.paginaCuadernoDao().observarTodas().first()
+        assertEquals(1, paginas.size)
+        assertEquals("reto_marea_dificil", paginas.first().idReto)
+        assertEquals("SUBE", paginas.first().tendenciaElegida)
+        assertTrue(paginas.first().tendenciaCorrecta)
+    }
 }

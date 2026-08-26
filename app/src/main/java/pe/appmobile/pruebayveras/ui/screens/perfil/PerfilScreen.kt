@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -27,11 +31,14 @@ import pe.appmobile.pruebayveras.R
 import pe.appmobile.pruebayveras.ui.theme.avatarDrawable
 
 @Composable
-fun PerfilScreen(viewModel: PerfilViewModel) {
+fun PerfilScreen(viewModel: PerfilViewModel, onVolver: () -> Unit = {}) {
     var alias by remember { mutableStateOf("") }
     var avatarElegido by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        IconButton(onClick = onVolver) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_volver))
+        }
         Text(stringResource(R.string.perfil_titulo))
         OutlinedTextField(
             value = alias,

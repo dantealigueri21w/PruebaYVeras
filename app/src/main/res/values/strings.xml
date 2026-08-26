@@ -34,4 +34,8 @@
     <string name="cd_isla_bloqueada">Isla bloqueada todavía</string>
     <string name="cd_isla_completada">Isla completada</string>
     <string name="cd_volver">Volver</string>
+    <string name="cd_abrir_cuaderno">Abrir el Cuaderno de Campo</string>
+    <string name="cd_abrir_cobertizo">Abrir el Cobertizo de Chirimbolo</string>
+    <string name="cd_abrir_perfil">Abrir tu perfil</string>
+    <string name="cd_abrir_ajustes">Abrir Ajustes</string>
 </resources>

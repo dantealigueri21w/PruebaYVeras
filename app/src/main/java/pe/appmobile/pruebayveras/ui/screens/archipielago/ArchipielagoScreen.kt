@@ -5,14 +5,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Handyman
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -42,7 +52,14 @@ private val posicionesIslas = mapOf(
 )
 
 @Composable
-fun ArchipielagoScreen(viewModel: ArchipielagoViewModel, onAbrirIsla: (String) -> Unit) {
+fun ArchipielagoScreen(
+    viewModel: ArchipielagoViewModel,
+    onAbrirIsla: (String) -> Unit,
+    onAbrirCuaderno: () -> Unit = {},
+    onAbrirCobertizo: () -> Unit = {},
+    onAbrirPerfil: () -> Unit = {},
+    onAbrirAjustes: () -> Unit = {},
+) {
     val islas by viewModel.islas.collectAsState()
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -72,6 +89,27 @@ fun ArchipielagoScreen(viewModel: ArchipielagoViewModel, onAbrirIsla: (String) -
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                 )
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)),
+        ) {
+            IconButton(onClick = onAbrirCuaderno) {
+                Icon(Icons.Filled.Book, contentDescription = stringResource(R.string.cd_abrir_cuaderno))
+            }
+            IconButton(onClick = onAbrirCobertizo) {
+                Icon(Icons.Filled.Handyman, contentDescription = stringResource(R.string.cd_abrir_cobertizo))
+            }
+            IconButton(onClick = onAbrirPerfil) {
+                Icon(Icons.Filled.Person, contentDescription = stringResource(R.string.cd_abrir_perfil))
+            }
+            IconButton(onClick = onAbrirAjustes) {
+                Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.cd_abrir_ajustes))
             }
         }
     }

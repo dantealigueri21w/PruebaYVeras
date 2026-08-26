@@ -1,10 +1,13 @@
 package pe.appmobile.pruebayveras.ui.screens.cobertizo
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import org.junit.After
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,6 +40,22 @@ class CobertizoScreenTest {
             PruebaYVerasTheme { CobertizoScreen(viewModel = viewModel) }
         }
         compose.waitForIdle()
+    }
+
+    @Test
+    fun `el boton de volver dispara su callback real`() {
+        val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
+            .allowMainThreadQueries().build()
+        val viewModel = viewModelDeTest(store, CobertizoViewModel::class.java) { CobertizoViewModel(db) }
+        var volvio = false
+
+        compose.setContent {
+            PruebaYVerasTheme { CobertizoScreen(viewModel = viewModel, onVolver = { volvio = true }) }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithContentDescription("Volver").performClick()
+        assertTrue(volvio)
     }
 
     @Test

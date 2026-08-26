@@ -3,6 +3,7 @@ package pe.appmobile.pruebayveras.data.repository
 import kotlinx.coroutines.flow.first
 import pe.appmobile.pruebayveras.data.AppDatabase
 import pe.appmobile.pruebayveras.data.entity.IntentoEntity
+import pe.appmobile.pruebayveras.data.entity.PaginaCuadernoEntity
 import pe.appmobile.pruebayveras.data.seed.SemillaInsignias
 import pe.appmobile.pruebayveras.data.seed.SemillaIslas
 import pe.appmobile.pruebayveras.data.seed.SemillaPiezas
@@ -53,5 +54,16 @@ class CienciaLabRepository(private val db: AppDatabase) {
     suspend fun confirmarPieza(idPieza: String) {
         val pieza = db.piezaChirimboloDao().observarTodas().first().first { it.idPieza == idPieza }
         db.piezaChirimboloDao().actualizar(pieza.copy(confirmada = true))
+    }
+
+    suspend fun registrarPaginaCuaderno(idReto: String, tendenciaElegida: Tendencia, tendenciaCorrecta: Boolean) {
+        db.paginaCuadernoDao().guardar(
+            PaginaCuadernoEntity(
+                idReto = idReto,
+                tendenciaElegida = tendenciaElegida.name,
+                tendenciaCorrecta = tendenciaCorrecta,
+                timestamp = System.currentTimeMillis(),
+            )
+        )
     }
 }

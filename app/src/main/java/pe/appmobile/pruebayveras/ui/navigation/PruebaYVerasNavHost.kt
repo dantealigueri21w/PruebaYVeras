@@ -30,6 +30,10 @@ fun PruebaYVerasNavHost(db: AppDatabase) {
             ArchipielagoScreen(
                 viewModel = viewModel,
                 onAbrirIsla = { navController.navigate(Rutas.isla(it)) },
+                onAbrirCuaderno = { navController.navigate(Rutas.CUADERNO) },
+                onAbrirCobertizo = { navController.navigate(Rutas.COBERTIZO) },
+                onAbrirPerfil = { navController.navigate(Rutas.PERFIL) },
+                onAbrirAjustes = { navController.navigate(Rutas.AJUSTES) },
             )
         }
         composable(
@@ -45,16 +49,16 @@ fun PruebaYVerasNavHost(db: AppDatabase) {
         }
         composable(Rutas.COBERTIZO) {
             val viewModel = remember { CobertizoViewModel(db) }
-            CobertizoScreen(viewModel = viewModel)
+            CobertizoScreen(viewModel = viewModel, onVolver = { navController.popBackStack() })
         }
         composable(Rutas.CUADERNO) {
             val viewModel = remember { CuadernoViewModel(db) }
-            CuadernoScreen(viewModel = viewModel)
+            CuadernoScreen(viewModel = viewModel, onVolver = { navController.popBackStack() })
         }
         composable(Rutas.PERFIL) {
             val viewModel = remember { PerfilViewModel(db) }
-            PerfilScreen(viewModel = viewModel)
+            PerfilScreen(viewModel = viewModel, onVolver = { navController.popBackStack() })
         }
-        composable(Rutas.AJUSTES) { AjustesScreen() }
+        composable(Rutas.AJUSTES) { AjustesScreen(onVolver = { navController.popBackStack() }) }
     }
 }

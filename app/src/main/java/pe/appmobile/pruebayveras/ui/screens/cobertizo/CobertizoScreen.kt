@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,12 +27,15 @@ import pe.appmobile.pruebayveras.ui.theme.piezaDeChirimbolo
 /** Cuadrícula armada a mano con `chunked`, nunca `LazyVerticalGrid` — son 9 piezas,
  * tamaño acotado (sección 7.1, punto 6). */
 @Composable
-fun CobertizoScreen(viewModel: CobertizoViewModel) {
+fun CobertizoScreen(viewModel: CobertizoViewModel, onVolver: () -> Unit = {}) {
     val piezas by viewModel.piezas.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
     ) {
+        IconButton(onClick = onVolver) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_volver))
+        }
         Text(stringResource(R.string.cobertizo_titulo))
         piezas.chunked(3).forEach { fila ->
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

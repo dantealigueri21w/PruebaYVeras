@@ -133,6 +133,44 @@ real, no el reloj de Compose); donde hace falta el resultado de esa
 corrutina antes de continuar, se sondea con `Thread.sleep` real en vez de
 confiar en una sola pasada de idle.
 
+## 26/08/2026 — Fase 2 cerrada: navegación real, Cuaderno de verdad, manuales generados
+
+Verificando la app instalada desde el APK real de GitHub Actions (no el build
+local) sobre un emulador con ADB, aparecieron dos bugs reales que ningún test
+había atrapado porque los tests construyen cada pantalla por separado, nunca
+navegando desde el `NavHost` como lo haría un usuario real.
+
+**1. `ArchipielagoScreen` no tenía ninguna forma de llegar al Cuaderno de
+Campo, al Cobertizo, al Perfil ni a Ajustes.** Las cuatro rutas existían en
+`PruebaYVerasNavHost` y sus pantallas funcionaban perfectamente en aislamiento
+— pero nada en el mapa del archipiélago las abría. Un usuario real nunca
+podría haber visto esas cuatro pantallas. Se agregó una fila de cuatro
+accesos (libro, herramientas, persona, engranaje) en la esquina superior del
+mapa, con su callback real conectado en el NavHost, y un botón de volver real
+en las cuatro pantallas secundarias (que tampoco lo tenían). Cubierto con dos
+tests nuevos que hacen `performClick()` sobre cada ícono y verifican el
+callback real, no solo que la pantalla "no revienta".
+
+**2. `IslaViewModel.elegirTendencia()` nunca guardaba nada en la tabla
+`pagina_cuaderno`.** El niño podía responder "sube/baja/no cambia" y la app
+usaba esa respuesta solo para decidir si confirmar la pieza de Chirimbolo —
+pero jamás llamaba al DAO del Cuaderno. El resultado real: la pantalla del
+Cuaderno de Campo iba a estar vacía para siempre, sin importar cuánto jugara
+el niño. Se agregó `CienciaLabRepository.registrarPaginaCuaderno(...)` y se
+conectó en `elegirTendencia()`. Verificado con un test nuevo (`IslaViewModelTest`)
+que juega los tres retos de una isla completa y confirma que la página queda
+en Room de verdad — y verificado además a mano en el emulador: la captura del
+Cuaderno en el manual de usuario es una página real que la app guardó durante
+esta misma sesión de pruebas, no un dato de muestra.
+
+`./gradlew testDebugUnitTest --rerun-tasks`: **122 tests, 0 fallos** (120 tras
+el fix de navegación + 2 del fix del Cuaderno). `lintDebug`: 0 errores.
+
+Con ambos bugs corregidos se generaron `2.Manual_Usuario_PruebaYVeras.pdf` y
+`3.Memoria_Descriptiva_PruebaYVeras.pdf` en `30.PruebaYVeras/`, con capturas
+reales tomadas por ADB sobre el APK de GitHub Actions instalado en un
+emulador — no mockups ni ilustraciones aparte.
+
 ## Qué sigue simplificado — dicho, no escondido
 
 - **Los 13 objetos manipulables** (huevo, sal, paracaídas, maceta, campana,
@@ -143,14 +181,19 @@ confiar en una sola pasada de idle.
   es real (gestos reales, motor real, dato persistido real) — lo que falta
   es la piel visual específica de cada objeto, no la interacción.
 - **`posicionesIslas` en `ArchipielagoScreen`** son coordenadas relativas
-  estimadas a mano sobre `mapa_archipielago.webp`, no medidas por análisis de
-  imagen — revisar visualmente contra el mapa real antes de la entrega final.
+  estimadas a mano sobre `mapa_archipielago.webp`. Verificadas el 26/08/2026
+  tocando cada una de las nueve sobre el emulador real: las nueve abren la
+  isla correcta.
 - **Sin sonido ni háptica.** Los interruptores de Ajustes existen y cambian
   de estado, pero no hay ningún efecto conectado detrás.
-- **Sin capturas del manual de usuario ni memoria descriptiva.** Empiezan en
-  la Fase 2, después de instalar el APK real que genere GitHub Actions — no
-  el de esta compilación local (sección 15 del prompt maestro: mismo código,
-  hash distinto).
+- **El botón "volver" dibujado dentro de `IslaScreen` no siempre respondió al
+  toque durante la verificación manual en el emulador** (el botón de sistema
+  Atrás sí funcionó siempre, gracias al `NavHost` estándar). No se reprodujo
+  de forma consistente ni se encontró la causa exacta a tiempo — posible
+  interferencia del `Column` con scroll que se dibuja encima. Pendiente de
+  investigar con `systematic-debugging` antes de la entrega final; no bloquea
+  el uso real porque el gesto de sistema es la forma principal de navegar
+  "atrás" en Android.
 
 Nada de esto afecta la regla central: **el mecanismo es el contenido** en
 las nueve islas — se manipula una perilla, un interruptor o un selector con

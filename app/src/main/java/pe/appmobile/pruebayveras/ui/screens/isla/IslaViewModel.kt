@@ -92,9 +92,12 @@ class IslaViewModel(private val db: AppDatabase, private val idIsla: String) : V
     }
 
     fun elegirTendencia(tendencia: Tendencia) {
-        val datos = _estado.value.resultadosPorReto.values.toList()
+        val actual = _estado.value
+        val datos = actual.resultadosPorReto.values.toList()
+        val reto = actual.retos.getOrNull(actual.indiceRetoActual) ?: return
         viewModelScope.launch {
             val correcta = MotorCuadernoDatos.conclusionEsCorrecta(datos, tendencia)
+            repository.registrarPaginaCuaderno(reto.idReto, tendencia, correcta)
             if (correcta) {
                 val idPieza = SemillaPiezas.piezas.first { it.idIsla == idIsla }.idPieza
                 repository.confirmarPieza(idPieza)
