@@ -18,6 +18,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +36,17 @@ import pe.appmobile.pruebayveras.ui.theme.avatarDrawable
 fun PerfilScreen(viewModel: PerfilViewModel, onVolver: () -> Unit = {}) {
     var alias by remember { mutableStateOf("") }
     var avatarElegido by remember { mutableIntStateOf(0) }
+    var yaCargadoDeRoom by remember { mutableStateOf(false) }
+
+    val perfilGuardado by viewModel.perfil.collectAsState()
+    LaunchedEffect(perfilGuardado) {
+        val perfil = perfilGuardado
+        if (!yaCargadoDeRoom && perfil != null) {
+            alias = perfil.alias
+            avatarElegido = perfil.avatarId
+            yaCargadoDeRoom = true
+        }
+    }
 
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         IconButton(onClick = onVolver) {
@@ -54,7 +67,11 @@ fun PerfilScreen(viewModel: PerfilViewModel, onVolver: () -> Unit = {}) {
                 fila.forEach { numero ->
                     Image(
                         painter = painterResource(avatarDrawable(numero)),
-                        contentDescription = "Avatar $numero",
+                        contentDescription = if (avatarElegido == numero) {
+                            "Avatar $numero, seleccionado"
+                        } else {
+                            "Avatar $numero"
+                        },
                         modifier = Modifier
                             .size(64.dp)
                             .border(
