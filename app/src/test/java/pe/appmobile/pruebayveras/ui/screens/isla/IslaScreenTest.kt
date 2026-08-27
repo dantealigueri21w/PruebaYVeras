@@ -24,15 +24,20 @@ class IslaScreenTest {
     val compose = createComposeRule()
 
     private val store = ViewModelStore()
+    private var dbAbierta: AppDatabase? = null
 
     /** Cierra el ViewModel de este test antes del siguiente — sin esto, la corrutina
      * de `init` (lanzada en `viewModelScope`) puede seguir viva y colarse en el
      * siguiente test cuando toda la suite corre junta, tocando una base de datos en
      * memoria que ya no existe (`IllegalStateException` real visto al correr
-     * `testDebugUnitTest` completo). */
+     * `testDebugUnitTest` completo). También cierra la base en memoria: el
+     * "Invalidation Tracker" propio de Room sigue vivo en un hilo de fondo compartido
+     * y, sin cerrarla, puede chocar contra una conexión de Robolectric ya reciclada
+     * por el siguiente test (`IllegalStateException: Illegal connection pointer`). */
     @After
     fun cerrarViewModel() {
         store.clear()
+        dbAbierta?.close()
     }
 
     /** Carga el ViewModel de la isla y renderiza `IslaScreen` de verdad, devolviendo el
@@ -50,7 +55,7 @@ class IslaScreenTest {
      * la mecánica anterior. */
     private fun cargarViewModel(idIsla: String): IslaViewModel {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .allowMainThreadQueries().build()
+            .allowMainThreadQueries().build().also { dbAbierta = it }
         val viewModel = viewModelDeTest(store, IslaViewModel::class.java) { IslaViewModel(db, idIsla) }
 
         compose.setContent {

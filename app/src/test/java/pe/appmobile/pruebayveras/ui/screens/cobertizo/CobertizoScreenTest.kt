@@ -24,16 +24,18 @@ class CobertizoScreenTest {
     val compose = createComposeRule()
 
     private val store = ViewModelStore()
+    private var dbAbierta: AppDatabase? = null
 
     @After
     fun cerrarViewModel() {
         store.clear()
+        dbAbierta?.close()
     }
 
     @Test
     fun `el cobertizo no revienta la app, incluso vacio`() {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .allowMainThreadQueries().build()
+            .allowMainThreadQueries().build().also { dbAbierta = it }
         val viewModel = viewModelDeTest(store, CobertizoViewModel::class.java) { CobertizoViewModel(db) }
 
         compose.setContent {
@@ -45,7 +47,7 @@ class CobertizoScreenTest {
     @Test
     fun `el boton de volver dispara su callback real`() {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .allowMainThreadQueries().build()
+            .allowMainThreadQueries().build().also { dbAbierta = it }
         val viewModel = viewModelDeTest(store, CobertizoViewModel::class.java) { CobertizoViewModel(db) }
         var volvio = false
 
@@ -61,7 +63,7 @@ class CobertizoScreenTest {
     @Test
     fun `el cobertizo no revienta la app con las 9 piezas sembradas`() {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .allowMainThreadQueries().build()
+            .allowMainThreadQueries().build().also { dbAbierta = it }
         kotlinx.coroutines.runBlocking { CienciaLabRepository(db).sembrarSiEsPrimeraVez() }
         val viewModel = viewModelDeTest(store, CobertizoViewModel::class.java) { CobertizoViewModel(db) }
 

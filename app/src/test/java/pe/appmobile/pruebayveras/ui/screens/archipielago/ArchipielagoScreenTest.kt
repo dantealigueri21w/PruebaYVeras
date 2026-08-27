@@ -23,28 +23,46 @@ class ArchipielagoScreenTest {
     val compose = createComposeRule()
 
     private val store = ViewModelStore()
+    private var dbAbierta: AppDatabase? = null
 
     @After
     fun cerrarViewModel() {
         store.clear()
+        dbAbierta?.close()
+    }
+
+    /** El sembrado de `ArchipielagoViewModel.init` corre en el executor propio de Room
+     * (un hilo de fondo real), no en el reloj de Compose: `waitForIdle()` no siempre
+     * alcanza a que termine. Sin esperar la condición real, `@After` puede cerrar la
+     * base mientras esa escritura de fondo todavía está en curso
+     * (`SQLException: connection is closed`, visto de verdad al correr la suite). */
+    private fun esperarSembrado(viewModel: ArchipielagoViewModel) {
+        var pasadas = 0
+        while (viewModel.islas.value.isEmpty() && pasadas < 100) {
+            Thread.sleep(50)
+            compose.waitForIdle()
+            pasadas++
+        }
+        assertTrue("las islas deben haberse sembrado", viewModel.islas.value.isNotEmpty())
     }
 
     @Test
     fun `el archipielago no revienta la app`() {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .allowMainThreadQueries().build()
+            .allowMainThreadQueries().build().also { dbAbierta = it }
         val viewModel = viewModelDeTest(store, ArchipielagoViewModel::class.java) { ArchipielagoViewModel(db) }
 
         compose.setContent {
             PruebaYVerasTheme { ArchipielagoScreen(viewModel = viewModel, onAbrirIsla = {}) }
         }
         compose.waitForIdle()
+        esperarSembrado(viewModel)
     }
 
     @Test
     fun `los cuatro accesos de la esquina disparan su callback real`() {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .allowMainThreadQueries().build()
+            .allowMainThreadQueries().build().also { dbAbierta = it }
         val viewModel = viewModelDeTest(store, ArchipielagoViewModel::class.java) { ArchipielagoViewModel(db) }
 
         var abrioCuaderno = false
@@ -65,6 +83,7 @@ class ArchipielagoScreenTest {
             }
         }
         compose.waitForIdle()
+        esperarSembrado(viewModel)
 
         compose.onNodeWithContentDescription("Abrir el Cuaderno de Campo").performClick()
         compose.onNodeWithContentDescription("Abrir el Cobertizo de Chirimbolo").performClick()

@@ -20,9 +20,13 @@ import pe.appmobile.pruebayveras.ui.testutil.viewModelDeTest
 class IslaViewModelTest {
 
     private val store = ViewModelStore()
+    private var dbAbierta: AppDatabase? = null
 
     @After
-    fun cerrarViewModel() { store.clear() }
+    fun cerrarViewModel() {
+        store.clear()
+        dbAbierta?.close()
+    }
 
     private fun esperarCarga(viewModel: IslaViewModel) {
         var pasadas = 0
@@ -36,7 +40,7 @@ class IslaViewModelTest {
     @Test
     fun `correr la prueba cambiando dos variables no bloquea, y marca la prueba como injusta`() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .allowMainThreadQueries().build()
+            .allowMainThreadQueries().build().also { dbAbierta = it }
         val viewModel = viewModelDeTest(store, IslaViewModel::class.java) { IslaViewModel(db, "isla_marea") }
         esperarCarga(viewModel)
 
@@ -59,7 +63,7 @@ class IslaViewModelTest {
     @Test
     fun `correr la prueba cambiando una sola variable es justa y guarda el intento`() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .allowMainThreadQueries().build()
+            .allowMainThreadQueries().build().also { dbAbierta = it }
         val viewModel = viewModelDeTest(store, IslaViewModel::class.java) { IslaViewModel(db, "isla_marea") }
         esperarCarga(viewModel)
 

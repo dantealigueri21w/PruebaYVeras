@@ -40,10 +40,12 @@ class IslaScreenInteraccionTest {
     val compose = createComposeRule()
 
     private val store = ViewModelStore()
+    private var dbAbierta: AppDatabase? = null
 
     @After
     fun cerrarViewModel() {
         store.clear()
+        dbAbierta?.close()
     }
 
     private data class IslaDeTest(val viewModel: IslaViewModel, val db: AppDatabase)
@@ -56,7 +58,7 @@ class IslaScreenInteraccionTest {
      */
     private fun cargarIsla(idIsla: String): IslaDeTest {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .allowMainThreadQueries().build()
+            .allowMainThreadQueries().build().also { dbAbierta = it }
         val viewModel = viewModelDeTest(store, IslaViewModel::class.java) { IslaViewModel(db, idIsla) }
 
         compose.setContent {
