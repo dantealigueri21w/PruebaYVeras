@@ -59,15 +59,6 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
             contentScale = ContentScale.Crop,
         )
 
-        IconButton(onClick = onVolver, modifier = Modifier.padding(8.dp)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_volver))
-        }
-        // Sin reto en curso de verdad (isla ya completada, o esperando la respuesta de
-        // tendencia del último reto ya resuelto) no hay pista que dar — el retoActual
-        // que quedaría ahí es el del desafío ya cerrado, no uno activo.
-        val retoParaAyuda = if (estado.piezaConfirmada || estado.mostrarPreguntaTendencia) null else estado.retoActual
-        AyudaFlotante(reto = retoParaAyuda, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -158,10 +149,27 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
             }
         }
 
-        // Se dibuja al final del Box (no antes de la Column) para quedar realmente
-        // encima de todo lo demás — Compose apila los hijos de un Box en el orden en
-        // que se declaran, y el overlay con scrim de TarjetaSabiasQue necesita ser el
-        // último para no quedar tapado por el contenido del reto.
+        // El botón de volver y el de ayuda van DESPUÉS del Column (no antes) por la
+        // misma razón que TarjetaSabiasQue más abajo: Compose apila los hijos de un Box
+        // en el orden en que se declaran, y ese orden decide tanto qué se ve encima como
+        // quién recibe el toque primero. El Column de arriba usa fillMaxSize() +
+        // verticalScroll(), así que sus límites de toque cubren TODA la pantalla aunque
+        // su contenido visible empiece más abajo (padding(top = 56.dp) solo desplaza el
+        // contenido, no el área táctil) — declarado antes, se comía los toques sobre
+        // estos dos botones aunque se vieran encima (bug real: ni "volver" ni "ayuda"
+        // respondían al tocarlos, confirmado jugando en un dispositivo real).
+        IconButton(onClick = onVolver, modifier = Modifier.padding(8.dp)) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_volver))
+        }
+        // Sin reto en curso de verdad (isla ya completada, o esperando la respuesta de
+        // tendencia del último reto ya resuelto) no hay pista que dar — el retoActual
+        // que quedaría ahí es el del desafío ya cerrado, no uno activo.
+        val retoParaAyuda = if (estado.piezaConfirmada || estado.mostrarPreguntaTendencia) null else estado.retoActual
+        AyudaFlotante(reto = retoParaAyuda, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
+
+        // Se dibuja al final del Box (después de los botones de arriba) para quedar
+        // realmente encima de todo lo demás — el overlay con scrim de TarjetaSabiasQue
+        // necesita ser el último para no quedar tapado por el contenido del reto.
         estado.tarjetaSabiasQue?.let { dato ->
             TarjetaSabiasQue(dato = dato, onCerrar = viewModel::cerrarTarjetaSabiasQue)
         }
@@ -171,7 +179,7 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
 @Composable
 private fun ControlDeVariable(nombre: String, valor: Any, onCambia: (Any) -> Unit) {
     when (valor) {
-        is Int -> PerillaGiratoria(valor = valor, rango = 0..20, etiqueta = nombre, onValorCambia = onCambia)
+        is Int -> PerillaGiratoria(valor = valor, rango = rangoDeVariableEntera(nombre), etiqueta = nombre, onValorCambia = onCambia)
         is Float -> PerillaGiratoria(
             valor = valor.toInt(), rango = rangoDeVariableContinua(nombre), etiqueta = nombre,
             onValorCambia = { onCambia(it.toFloat()) },
@@ -206,6 +214,21 @@ private fun ControlDeVariable(nombre: String, valor: Any, onCambia: (Any) -> Uni
 private fun rangoDeVariableContinua(nombre: String): IntRange = when (nombre) {
     "distancia" -> 0..15
     else -> 0..60
+}
+
+/**
+ * Bug real encontrado jugando: con el rango genérico 0..20 para toda variable entera,
+ * "volumenAgua" (Isla de la Marea) arrancaba en 250 — muy fuera de rango, así que el
+ * arco se dibujaba ya "enrollado" varias vueltas desde el primer render, y el primer
+ * arrastre lo hacía saltar de golpe a un valor dentro de 0..20 sin que quien juega
+ * tocara nada con intención de eso. Y "temperatura" (Isla de las Olas) no podía llegar
+ * a los 40 grados que el reto difícil pide explícitamente probar ("Prueba con agua a
+ * 5, 20 y 40 grados..."), porque 20 ya era el tope del rango.
+ */
+private fun rangoDeVariableEntera(nombre: String): IntRange = when (nombre) {
+    "volumenAgua" -> 50..500
+    "temperatura" -> 0..60
+    else -> 0..20
 }
 
 /** Un motor de fenómeno puede devolver algo como 12.499998 — se redondea a un

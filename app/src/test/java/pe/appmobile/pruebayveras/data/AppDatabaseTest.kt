@@ -45,13 +45,14 @@ class AppDatabaseTest {
         db.intentoDao().guardar(
             IntentoEntity(
                 idReto = "reto_marea_1", variableCambiada = "sal",
-                valorProbado = "3", resultadoReal = 3f,
-                logrado = true, timestamp = 1000L,
+                valorControl = "0", valorPrueba = "3",
+                resultadoControl = 0f, resultadoPrueba = 3f,
+                fueJusta = true, timestamp = 1000L,
             )
         )
         val intentos = db.intentoDao().observarPorReto("reto_marea_1").first()
         assertEquals(1, intentos.size)
-        assertEquals(true, intentos.first().logrado)
+        assertEquals(true, intentos.first().fueJusta)
     }
 
     @Test

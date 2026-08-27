@@ -1,7 +1,7 @@
--- Prueba y Verás — esquema de la base de datos local (SQLite vía Room), versión 1.
+-- Prueba y Verás — esquema de la base de datos local (SQLite vía Room), versión 3.
 --
 -- Transcripción del esquema que Room exporta en
--- app/schemas/pe.appmobile.pruebayveras.data.AppDatabase/1.json,
+-- app/schemas/pe.appmobile.pruebayveras.data.AppDatabase/3.json,
 -- con los nombres de tabla ya resueltos. Toda la información vive en el
 -- dispositivo: no hay servidor, ni cuentas, ni sincronización.
 
@@ -32,12 +32,19 @@ CREATE TABLE IF NOT EXISTS `isla` (
 -- cambiar para responder la corazonada de `textoCorazonada` — el motor de
 -- prueba justa (`MotorPruebaJusta`) usa este valor para verificar que el
 -- montaje de prueba difiere del de control en esa única variable.
+-- `direccionEsperada` ("SUBE", "BAJA" o "NO_CAMBIA") es la meta direccional
+-- que se muestra antes de tocar nada, nunca un número exacto que cazar.
+-- `datoCientifico` es el dato real que se gana como tarjeta "¿Sabías que...?"
+-- al terminar el reto en una prueba justa — propio de cada reto, no una
+-- recompensa genérica.
 CREATE TABLE IF NOT EXISTS `reto` (
     `idReto`                TEXT    NOT NULL,
     `idIsla`                TEXT    NOT NULL,
     `dificultad`            TEXT    NOT NULL,
     `textoCorazonada`       TEXT    NOT NULL,
     `variableIndependiente` TEXT    NOT NULL,
+    `direccionEsperada`     TEXT    NOT NULL,
+    `datoCientifico`        TEXT    NOT NULL,
     `completado`            INTEGER NOT NULL,
     PRIMARY KEY(`idReto`)
 );

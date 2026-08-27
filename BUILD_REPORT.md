@@ -422,3 +422,106 @@ ya" y la versión "visualmente completa" — ambas descritas en el spec.
 
 Verificado: 117 tests (incluye los reescritos para la mecánica nueva) en verde,
 `lintDebug` y `assembleDebug` limpios, sobre las nueve islas.
+
+## 26/08/2026 — Cerrado: vuelta a la mesa de control/prueba, con lo aprendido de la mecánica de logro
+
+La mecánica de "logro real" de la sección anterior se jugó completa y no convenció:
+sin una referencia de control al lado, tocar una perilla hasta que un medidor diga
+"lograste" se siente más a acertar un número que a experimentar de verdad — el
+punto que sí acertaba `MesaDoblePrueba`. Se decidió **volver a la mesa de
+control/prueba y a `MotorPruebaJusta`/`MotorCuadernoDatos`**, ambos restaurados
+desde el historial de git, y usar lo aprendido del intento de "logro" en tres
+mejoras concretas que la mesa original no tenía:
+
+- **Meta direccional en vez de meta numérica.** Antes de tocar nada, el reto ahora
+  muestra "Meta: que suba/baje más que el control" (`RetoEntity.direccionEsperada`,
+  "SUBE"/"BAJA"/"NO_CAMBIA") — el niño sabe hacia dónde apuntar sin que se le dé
+  ni se le esconda un número exacto que cazar.
+- **Tarjeta "¿Sabías que...?" por reto**, con el dato científico real de
+  `RetoEntity.datoCientifico`, mostrada al cerrar una prueba justa exitosa — el
+  refuerzo que la mecánica de logro sí tenía (la explicación tras el resultado) sin
+  el medidor de cercanía que se sentía artificial.
+- **Tutorial jugado, no leído.** La primera vez que se entra a la Isla de la
+  Marea, Chirimbolo señala explícitamente que el Control no se toca y que la
+  Prueba sí se puede cambiar, antes de dejar correr la primera prueba. Las demás
+  islas y las visitas siguientes a la Marea no repiten el aviso.
+- **Botón de ayuda flotante persistente**, con la pista del reto actual
+  (`AyudaFlotante`) disponible en todo momento, no solo la primera vez.
+
+Se retiró de nuevo el panel de "¡Lo lograste!"/"Todavía no" y su medidor de
+cercanía (`PanelResultado`, `valorObjetivo`/`margenObjetivo` de `RetoEntity`), ya
+sin uso. `IntentoEntity` y `PaginaCuadernoEntity` volvieron a su forma de
+control/prueba (`variableCambiada`, `valorControl`/`valorPrueba`,
+`resultadoControl`/`resultadoPrueba`, `fueJusta`; `tendenciaElegida`/
+`tendenciaCorrecta`) — Room sube a versión 3.
+
+**Un bug real encontrado jugando, no por los tests:** en `IslaScreen`, el botón
+"volver" y el botón de ayuda flotante se dibujaban *antes* que el `Column` de
+contenido del reto en el `Box` de la pantalla — y ese `Column` usa
+`fillMaxSize()` + `verticalScroll()`, así que su área táctil cubre toda la
+pantalla aunque su contenido visible empiece más abajo. Declarado antes, se
+comía los toques sobre ambos botones aunque se vieran encima: ni "volver" ni
+"ayuda" respondían al tocarlos en el emulador, pese a que los tests de Robolectric
+(que no reproducen el orden de superposición real de forma confiable) seguían en
+verde. Se corrigió moviendo ambos botones para que se dibujen después del
+`Column`, igual que ya se hacía con `TarjetaSabiasQue`. Reverificado tocando
+ambos botones sobre un emulador real: ahora sí responden.
+
+**Dos rangos de variable entera corregidos por lo mismo — encontrados jugando:**
+`volumenAgua` (Isla de la Marea) arrancaba en 250 contra el rango genérico 0..20,
+así que el arco de la perilla se dibujaba ya enrollado varias vueltas desde el
+primer render; y `temperatura` (Isla de las Olas) no podía llegar a los 40 grados
+que el propio reto difícil pide probar explícitamente. Se les dio rango propio
+(`volumenAgua` 50..500, `temperatura` 0..60) en `rangoDeVariableEntera()`.
+
+Arreglados también los dos archivos de test que quedaron con nombres de campo de
+la mecánica de logro (`AppDatabaseTest.kt`, `CuadernoScreenTest.kt`) —
+mismos casos, mismas aserciones, solo actualizados a los campos reales de
+`IntentoEntity`/`PaginaCuadernoEntity`. Regenerados `database/schema.sql` y
+`database/sample_data.sql` para reflejar el esquema de Room versión 3 y las
+semillas reales (`data/seed/Semilla*.kt`) — verificado columna por columna y
+fila por fila contra el código, no una copia de una versión anterior.
+
+### `./gradlew testDebugUnitTest --rerun-tasks` — 143 tests, 0 fallos, 0 errores
+
+```
+BUILD SUCCESSFUL in 2m 31s
+29 actionable tasks: 29 executed
+```
+
+### `./gradlew lintDebug` — 0 errores, 31 avisos
+
+Todos esperables: versiones de librería ancladas a propósito, `UnusedResources`
+sobre los mismos 10 objetos manipulables de siempre más 6 strings de pulido
+futuro, el atributo `allowBackup` deprecado (cosmético), y un aviso de
+tipografía sobre "..." en el título de la tarjeta "¿Sabías que...?".
+
+### `./gradlew assembleDebug` — APK real generado
+
+| Dato | Valor |
+|---|---|
+| Archivo | `app/build/outputs/apk/debug/app-debug.apk` |
+| Tamaño | 24 MB (23 897 090 bytes) |
+
+### Verificación manual sobre un emulador real (no Robolectric)
+
+Instalado con `adb install -r` y jugado tocando de verdad, con coordenadas
+sacadas de `uiautomator dump` (nunca a ojo), en tres islas distintas (Marea,
+Viento, Risco — variable numérica, booleana y categórica respectivamente, para
+cubrir los tres tipos de control):
+
+- Cambiar dos variables de la Prueba (`sal` y `volumenAgua`) y correr la prueba
+  muestra "Eso cambió más de una cosa — Cambiaste sal, volumenAgua a la vez...",
+  con los nombres reales de las variables cambiadas.
+- Cambiar solo `sal` y correr la prueba muestra "¡Prueba justa!" y, al continuar,
+  la tarjeta "¿Sabías que...?" con el dato científico real del reto
+  (`reto_marea_facil`).
+- El botón de ayuda flotante muestra la pista del reto actual en ambas islas
+  probadas, con el nombre de variable correcto en cada una.
+- El tutorial de Chirimbolo señalando el Control apareció solo al entrar por
+  primera vez a la Isla de la Marea; no reapareció al volver a entrar, y no
+  apareció nunca en Isla del Viento ni Isla del Risco.
+- El botón "volver" y el botón de ayuda respondieron al toque en las tres islas,
+  confirmando en la práctica el arreglo de superposición descrito arriba.
+- El Cuaderno de Campo, sin páginas guardadas todavía en esta instalación,
+  mostró su estado vacío ("Todavía no hay páginas...") sin errores.

@@ -47,7 +47,12 @@ class CuadernoScreenTest {
             .allowMainThreadQueries().build()
         kotlinx.coroutines.runBlocking {
             db.paginaCuadernoDao().guardar(
-                PaginaCuadernoEntity(idReto = "reto_marea_facil", resultadoReal = 5f, timestamp = 1000L),
+                PaginaCuadernoEntity(
+                    idReto = "reto_marea_facil",
+                    tendenciaElegida = "SUBE",
+                    tendenciaCorrecta = true,
+                    timestamp = 1000L,
+                ),
             )
         }
         val viewModel = viewModelDeTest(store, CuadernoViewModel::class.java) { CuadernoViewModel(db) }
@@ -64,7 +69,12 @@ class CuadernoScreenTest {
             .allowMainThreadQueries().build()
         kotlinx.coroutines.runBlocking {
             db.paginaCuadernoDao().guardar(
-                PaginaCuadernoEntity(idReto = "reto_marea_facil", resultadoReal = 5f, timestamp = 1000L),
+                PaginaCuadernoEntity(
+                    idReto = "reto_marea_facil",
+                    tendenciaElegida = "SUBE",
+                    tendenciaCorrecta = true,
+                    timestamp = 1000L,
+                ),
             )
         }
         val viewModel = viewModelDeTest(store, CuadernoViewModel::class.java) { CuadernoViewModel(db) }

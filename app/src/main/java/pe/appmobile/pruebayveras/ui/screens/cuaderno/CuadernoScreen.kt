@@ -63,6 +63,11 @@ private fun PaginaDeCuaderno(pagina: PaginaCuadernoEntity) {
         "DIFICIL" -> stringResource(R.string.cuaderno_dificultad_dificil)
         else -> null
     }
+    val etiquetaTendencia = when (pagina.tendenciaElegida) {
+        "SUBE" -> stringResource(R.string.isla_tendencia_sube)
+        "BAJA" -> stringResource(R.string.isla_tendencia_baja)
+        else -> stringResource(R.string.isla_tendencia_no_cambia)
+    }
 
     Box(
         modifier = Modifier
@@ -84,7 +89,16 @@ private fun PaginaDeCuaderno(pagina: PaginaCuadernoEntity) {
                 )
             }
             Text(
-                text = stringResource(R.string.cuaderno_pagina_logrado),
+                text = stringResource(R.string.cuaderno_pagina_tu_respuesta, etiquetaTendencia),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = if (pagina.tendenciaCorrecta) {
+                    stringResource(R.string.cuaderno_pagina_logrado)
+                } else {
+                    stringResource(R.string.cuaderno_pagina_no_logrado)
+                },
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
