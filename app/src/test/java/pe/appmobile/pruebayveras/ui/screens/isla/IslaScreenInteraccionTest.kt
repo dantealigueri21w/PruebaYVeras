@@ -135,6 +135,40 @@ class IslaScreenInteraccionTest {
     }
 
     @Test
+    fun `correr la prueba sin cambiar ninguna variable explica que no cambio nada, no que cambio mas de una`() {
+        val (viewModel, _) = cargarIsla("isla_marea")
+
+        // Ninguna llamada a cambiarVariablePrueba: la Prueba arranca igual al Control,
+        // igual que la primera vez que se juega cada uno de los 27 retos — el tutorial
+        // de la Tarea 10 dice "cuando estés listo, corre la prueba" sin instruir a
+        // cambiar nada antes.
+        compose.onNodeWithText("Correr la prueba").performScrollTo().performClick()
+        compose.waitForIdle()
+        esperarResultado(viewModel)
+
+        assertFalse("cero variables distintas no es una prueba justa", viewModel.estado.value.ultimoResultado!!.fueJusta)
+        assertTrue(
+            "no debe haber ninguna variable distinta si no se tocó nada",
+            viewModel.estado.value.ultimoResultado!!.variablesDistintas.isEmpty(),
+        )
+
+        // El bug real: con variablesDistintas vacía, IslaScreen reutilizaba el título y
+        // la explicación de "más de una cosa" (falsos con cero cambios) y la
+        // interpolación de isla_prueba_injusta_explicacion dejaba un hueco en blanco
+        // ("Cambiaste  a la vez..."). Debe verse el mensaje real de "no cambiaste nada",
+        // no el de "más de una" ni el texto roto con el hueco vacío.
+        compose.onNodeWithText("Todavía no cambiaste nada", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Eso cambió más de una cosa", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Cambiaste  a la vez", substring = true).assertDoesNotExist()
+
+        compose.onNodeWithText("Volver a intentar").performScrollTo().performClick()
+        compose.waitForIdle()
+
+        assertEquals("no debe avanzar de reto si la prueba no fue justa", 0, viewModel.estado.value.indiceRetoActual)
+        assertTrue("el resultado debe cerrarse para poder tantear de nuevo", viewModel.estado.value.ultimoResultado == null)
+    }
+
+    @Test
     fun `una prueba justa muestra el resultado y la tarjeta sabias que, y Continuar avanza al siguiente reto`() {
         val (viewModel, _) = cargarIsla("isla_marea")
         val indiceInicial = viewModel.estado.value.indiceRetoActual

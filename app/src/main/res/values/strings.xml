@@ -28,6 +28,8 @@
 
     <string name="isla_prueba_injusta_titulo">Eso cambió más de una cosa</string>
     <string name="isla_prueba_injusta_explicacion">Cambiaste %1$s a la vez, así que no podemos saber cuál de esas causó el resultado. Iguala todo menos una cosa y vuelve a correr la prueba.</string>
+    <string name="isla_prueba_sin_cambios_titulo">Todavía no cambiaste nada</string>
+    <string name="isla_prueba_sin_cambios_explicacion">La Prueba quedó igual que el Control. Cambia algo en la Prueba y vuelve a correr la prueba para comparar.</string>
     <string name="isla_prueba_justa_titulo">¡Prueba justa!</string>
     <string name="isla_resultado_control_prueba">Control: %1$s   Prueba: %2$s</string>
     <string name="isla_reintentar">Volver a intentar</string>

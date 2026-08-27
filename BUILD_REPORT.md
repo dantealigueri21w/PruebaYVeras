@@ -540,3 +540,34 @@ cubriera; se agregaron dos casos a `CuadernoScreenTest.kt` que montan una
 página con `tendenciaCorrecta = true` y otra con `tendenciaCorrecta = false` y
 confirman con `onNodeWithText(...).assertExists()` que aparece el texto real
 correspondiente a cada caso.
+
+## 26/08/2026 — Cuarto bug real, encontrado en la revisión final antes de publicar el repo
+
+**En `IslaScreen`, correr la prueba sin haber cambiado ninguna variable en la
+Prueba mostraba un mensaje falso y roto.** `prueba` arranca igual que `control`
+(`Montaje(adaptador.variablesBase)` en ambos, en `IslaViewModel`), así que si el
+niño toca "Correr la prueba" como primera acción — la más probable en cada uno
+de los 27 retos, y la que el propio tutorial jugado de la Isla de la Marea
+invita a hacer sin pedir que se cambie nada antes ("Cuando estés listo, corre la
+prueba") — `MotorPruebaJusta.evaluar` devuelve `esJusta = false` con
+`variablesDistintas` vacía: cero variables distintas tampoco es "exactamente
+una", pero `IslaScreen` no distinguía ese caso del de "cambiaste más de una a
+la vez", así que reutilizaba el mismo título y la misma explicación. En
+pantalla se veía "Eso cambió más de una cosa" (falso: cambiaron cero) seguido
+de "Cambiaste  a la vez, así que no podemos saber cuál de esas causó el
+resultado." — con un hueco en blanco donde `%1$s` interpolaba una lista vacía,
+oración rota.
+
+Se agregaron dos strings nuevos (`isla_prueba_sin_cambios_titulo`,
+`isla_prueba_sin_cambios_explicacion`) y `IslaScreen` ahora distingue
+explícitamente `resultado.variablesDistintas.isEmpty()` del caso de más de una,
+mostrando "Todavía no cambiaste nada" en vez de reutilizar el texto pensado
+para "más de una cosa". Se agregó un test de regresión a
+`IslaScreenInteraccionTest.kt` que carga una isla, toca "Correr la prueba" sin
+tocar ninguna variable antes, y confirma que aparece el mensaje real de "no
+cambiaste nada" — y no el de "más de una cosa" ni el texto con el hueco en
+blanco. Verificado que el test falla contra el código anterior (revirtiendo
+solo `IslaScreen.kt` y corriendo el test nuevo, con `AssertionError` real) y
+pasa con el arreglo puesto.
+
+### `./gradlew testDebugUnitTest --rerun-tasks` — 146 tests, 0 fallos, 0 errores

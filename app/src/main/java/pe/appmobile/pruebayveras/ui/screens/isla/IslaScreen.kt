@@ -126,13 +126,29 @@ fun IslaScreen(viewModel: IslaViewModel, onVolver: () -> Unit) {
                         },
                     )
                 } else {
+                    // Cero variables distintas tampoco es una prueba justa (MotorPruebaJusta
+                    // exige exactamente una), pero es un caso distinto de "cambió más de una":
+                    // aquí no cambió NINGUNA — el título y la explicación de "más de una cosa"
+                    // serían falsos, y con variablesDistintas vacía la interpolación de
+                    // isla_prueba_injusta_explicacion dejaba un hueco en blanco en la oración.
+                    val sinCambios = !resultado.fueJusta && resultado.variablesDistintas.isEmpty()
                     PanelLegible {
                         Text(
-                            if (resultado.fueJusta) stringResource(R.string.isla_prueba_justa_titulo) else stringResource(R.string.isla_prueba_injusta_titulo),
+                            when {
+                                resultado.fueJusta -> stringResource(R.string.isla_prueba_justa_titulo)
+                                sinCambios -> stringResource(R.string.isla_prueba_sin_cambios_titulo)
+                                else -> stringResource(R.string.isla_prueba_injusta_titulo)
+                            },
                             style = MaterialTheme.typography.titleLarge,
                         )
                         if (!resultado.fueJusta) {
-                            Text(stringResource(R.string.isla_prueba_injusta_explicacion, resultado.variablesDistintas.joinToString(", ")))
+                            Text(
+                                if (sinCambios) {
+                                    stringResource(R.string.isla_prueba_sin_cambios_explicacion)
+                                } else {
+                                    stringResource(R.string.isla_prueba_injusta_explicacion, resultado.variablesDistintas.joinToString(", "))
+                                },
+                            )
                         }
                         Text(
                             stringResource(
