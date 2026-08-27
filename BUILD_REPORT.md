@@ -10,7 +10,7 @@ Room 2.8.4, JDK 17, compileSdk/targetSdk 37, minSdk 24.
 
 ## 25/08/2026 — Parte 1 cerrada: dominio y datos, 100 % verificados
 
-Sigue el plan `.superpowers/plans/2026-08-25-pruebayveras-dominio-y-datos.md`.
+Sigue el plan de la fase de dominio y datos (25/08/2026).
 Esta parte no incluye ninguna pantalla todavía (`MainActivity` es un
 marcador de posición) — cubre `domain/` y `data/` completos, tal como los
 describe `fichas/30-CIENCIALAB.md`.
@@ -62,7 +62,7 @@ la sección 1 del prompt maestro, aplicado a una clase de infraestructura.
 
 ## 25/08/2026 — Parte 2 cerrada: las 14 pantallas, arte integrado, APK real
 
-Sigue el plan `.superpowers/plans/2026-08-25-pruebayveras-ui-pantallas.md`.
+Sigue el plan de la fase de pantallas e interfaz (25/08/2026).
 Tema con paleta verificada por contraste WCAG, tres formas propias
 (`GenericShape`), tres componentes manipuladores que reemplazan
 `Slider`/`Switch` de Material, `MesaDoblePrueba` reutilizable en las nueve
@@ -372,7 +372,7 @@ público de 8 a 12 años. Se investigó `investigacion/30-CIENCIALAB.md` y se co
 que el precedente citado como validación (PhET Interactive Simulations) no usa ese
 formalismo — deja manipular una variable y ver el efecto real al instante. Se
 acordó con Rodrigo un rediseño completo de la mecánica, documentado en
-`docs/superpowers/specs/2026-08-26-mecanica-logro-tocar-y-ver.md` (no se sube al
+un documento interno de diseño (no se sube al
 repo, ver sección 11.2 del prompt maestro) y simplificado después a pedido suyo
 para poder entregarlo de inmediato.
 
