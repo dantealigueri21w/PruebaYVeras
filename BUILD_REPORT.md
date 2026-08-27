@@ -525,3 +525,18 @@ cubrir los tres tipos de control):
   confirmando en la práctica el arreglo de superposición descrito arriba.
 - El Cuaderno de Campo, sin páginas guardadas todavía en esta instalación,
   mostró su estado vacío ("Todavía no hay páginas...") sin errores.
+
+**Un tercer bug real, encontrado después por una revisión de calidad y no por
+los tests ni jugando:** en `CuadernoScreen.kt`, `PaginaDeCuaderno` mostraba
+siempre "¡Lo lograste!" en cada página del Cuaderno, sin importar si la
+respuesta guardada en esa página era correcta — nunca leía
+`PaginaCuadernoEntity.tendenciaCorrecta` ni `tendenciaElegida`, así que un niño
+que se equivocaba en una prueba veía el mismo mensaje de logro que uno que
+acertaba. Corregido para que la página muestre primero "Tu respuesta:
+Sube/Baja/No cambia" (leyendo `tendenciaElegida`) y luego, según
+`tendenciaCorrecta`, "¡Lo lograste!" o "Todavía no… ¡sigue investigando!". El
+arreglo en sí ya estaba hecho en este commit, pero sin ningún test que lo
+cubriera; se agregaron dos casos a `CuadernoScreenTest.kt` que montan una
+página con `tendenciaCorrecta = true` y otra con `tendenciaCorrecta = false` y
+confirman con `onNodeWithText(...).assertExists()` que aparece el texto real
+correspondiente a cada caso.

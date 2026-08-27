@@ -88,4 +88,56 @@ class CuadernoScreenTest {
         // ("reto_marea_facil") en vez de un nombre que un niño pueda leer.
         compose.onNodeWithText("Isla de la Marea").assertIsDisplayed()
     }
+
+    @Test
+    fun `una pagina con tendencia correcta muestra el mensaje de logro`() {
+        val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
+            .allowMainThreadQueries().build()
+        kotlinx.coroutines.runBlocking {
+            db.paginaCuadernoDao().guardar(
+                PaginaCuadernoEntity(
+                    idReto = "reto_marea_facil",
+                    tendenciaElegida = "SUBE",
+                    tendenciaCorrecta = true,
+                    timestamp = 1000L,
+                ),
+            )
+        }
+        val viewModel = viewModelDeTest(store, CuadernoViewModel::class.java) { CuadernoViewModel(db) }
+
+        compose.setContent {
+            PruebaYVerasTheme { CuadernoScreen(viewModel = viewModel) }
+        }
+        compose.waitForIdle()
+
+        // Antes de este arreglo, el Cuaderno mostraba "¡Lo lograste!" sin importar
+        // si tendenciaCorrecta era true o false.
+        compose.onNodeWithText("¡Lo lograste!").assertExists()
+    }
+
+    @Test
+    fun `una pagina con tendencia incorrecta muestra el mensaje de aun no logrado`() {
+        val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
+            .allowMainThreadQueries().build()
+        kotlinx.coroutines.runBlocking {
+            db.paginaCuadernoDao().guardar(
+                PaginaCuadernoEntity(
+                    idReto = "reto_marea_facil",
+                    tendenciaElegida = "BAJA",
+                    tendenciaCorrecta = false,
+                    timestamp = 1000L,
+                ),
+            )
+        }
+        val viewModel = viewModelDeTest(store, CuadernoViewModel::class.java) { CuadernoViewModel(db) }
+
+        compose.setContent {
+            PruebaYVerasTheme { CuadernoScreen(viewModel = viewModel) }
+        }
+        compose.waitForIdle()
+
+        // Antes de este arreglo, este mensaje nunca se mostraba: el texto de
+        // "logrado" aparecia siempre, sin leer tendenciaCorrecta.
+        compose.onNodeWithText("Todavía no… ¡sigue investigando!").assertExists()
+    }
 }
